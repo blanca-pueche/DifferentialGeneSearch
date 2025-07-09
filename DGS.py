@@ -15,6 +15,12 @@ ENSEMBL_LOOKUP_URL = "https://rest.ensembl.org/lookup/id/"
 
 st.markdown("""
     <style>
+    html, body, .stApp {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
     .main {
         background: linear-gradient(to bottom right, #e3f2fd, #fce4ec);
         font-family: 'Arial', sans-serif;
@@ -24,13 +30,13 @@ st.markdown("""
         background-color: #6a1b9a;
         color: white;
         font-weight: bold;
-        border-radius: 10px;
+        border-radius: 5px;
     }
     .stDownloadButton > button {
         background-color: #2e7d32;
         color: white;
         font-weight: bold;
-        border-radius: 10px;
+        border-radius: 5px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -82,7 +88,80 @@ def fetch_gene_names(df):
     return grouped
 
 
+def find_possible_target_of_drugs(ensembl_id):
+    """
+    Given an Ensembl Gene ID, it asks the OpenTragetS API to check if it's a drug target.
+    Returns the gene symbol, whether it's a known drug target, and associated approved drugs.
+    """
+    #url = f"https://platform-api.opentargets.io/v3/platform/public/target/{ensembl_id}/associations"
+    #url= f"https://api.platform.opentargets.org/api/v4/graphql/browser?query={ensembl_id}"
     
+
+
+    # Build query string to get general information about AR and genetic constraint and tractability assessments 
+    query_string = """
+      query target($ensemblId: String!){
+        target(ensemblId: $ensemblId){
+          id
+          approvedSymbol
+          biotype
+          geneticConstraint {
+            constraintType
+            exp
+            obs
+            score
+            oe
+            oeLower
+            oeUpper
+          }
+          tractability {
+            label
+            modality
+            value
+          }
+        }
+      }"""
+
+    # Set variables object of arguments to be passed to endpoint
+    variables = {"ensemblId": ensembl_id}
+
+    # Set base URL of GraphQL API endpoint
+    base_url = "https://api.platform.opentargets.org/api/v4/graphql"
+
+    # Perform POST request and check status code of response
+    try:
+        r = requests.post(base_url, json={"query": query_string, "variables": variables})
+        if r.status_code != 200:
+            return None
+        data = r.json()['data']['target']
+        return {
+            "Gene Symbol": data.get("approvedSymbol", ""),
+            "Ensembl ID": data.get("id", ""),
+            "Name": data.get("approvedName", ""),
+            "Biotype": data.get("biotype", ""),
+            "Tractability": [
+                t["label"] for t in data.get("tractability", []) if t["value"]
+            ]
+        }
+    except:
+        return None
+    
+def analyze_pathways(df, number):
+    gene_list = df["Gene Name"].dropna().unique().tolist()
+    enr = gp.enrichr(gene_list=gene_list, gene_sets="Reactome_2022", organism="Human", outdir=None)
+    if enr.results.empty:
+        return None, None
+    top_pathways = enr.results.sort_values("Adjusted P-value").head(number)
+
+    top_pathways["Reactome Link"] = top_pathways["Term"].apply(
+        lambda term: f'<a href="https://reactome.org/content/query?q={urllib.parse.quote(term)}" target="_blank">{term}</a>'
+    )
+
+    top_pathway_genes = top_pathways.iloc[0]["Genes"].split(";")
+    important_genes = df[df["Gene Name"].isin(top_pathway_genes)].copy()
+    important_genes["abs_fc"] = important_genes["log_2 fold change"].abs()
+    important_genes = important_genes.sort_values("abs_fc", ascending=False)
+    return top_pathways, important_genes
     
     
 
@@ -114,6 +193,7 @@ if mesh_id:
                 
                 with st.spinner("🔄 Mapping Ensembl IDs to gene names..."):
                     df_selected = fetch_gene_names(df_raw)
+                
                 # Convert the Ensembl gene IDs into HTML links
                 df_selected_with_links = df_selected.copy()
                 df_selected_with_links["Gene"] = df_selected_with_links["Gene"].apply(
@@ -143,4 +223,157 @@ if mesh_id:
                     "genes.csv",
                     "text/csv"
                 )
+                
+                # Crear una copia para conservar los datos originales si es necesario
+                df_selected["Gene Name_raw"] = df_selected["Gene Name"]
+
+                # Agrupar por "Gene Name" y sumar los valores de "log_2 fold change"
+                gname_fc = df_selected.groupby("Gene Name_raw", as_index=False)["log_2 fold change"].sum()
+
+                # Crear gráfico de barras con plotly
+                fig = px.bar(
+                    gname_fc,
+                    x="Gene Name_raw",
+                    y="log_2 fold change",
+                    color="log_2 fold change",
+                    color_continuous_scale="sunset",
+                    title="Suma de log₂ fold change por Gene Name",
+                    labels={"Gene Name_raw": "Gene Name", "log_2 fold change": "Suma log₂ fold change"},
+                    height=500,
+                    width=2000
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
+
+                         
+                
+                # Buscar genes con posible tractabilidad farmacológica
+                with st.spinner("🔍 Consultando Open Targets para posibles dianas..."):
+                    openTargets_results = df_selected["Gene"].apply(find_possible_target_of_drugs)
+                    openTargets_df = pd.DataFrame([r for r in openTargets_results if r is not None])
+
+                if not openTargets_df.empty:
+                    # Eliminar la columna "Name" si existe
+                    if "Name" in openTargets_df.columns:
+                        openTargets_df = openTargets_df.drop(columns=["Name"])
+
+                        openTargets_df = openTargets_df.sort_values(by="Gene Symbol")
+
+                        # Guardar la lista original de tags en otra columna para análisis
+                        openTargets_df["Tractability_raw"] = openTargets_df["Tractability"]
+                        openTargets_df["Biotype_raw"] = openTargets_df["Biotype"]
+
+                        # Formatear para mostrar en la tabla con píldoras
+                        def format_tractability(tags):
+                            if not tags:
+                               return ""
+                            return " ".join(
+                               f'<span style="background-color:#d1c4e9; color:#4a148c; padding:4px 8px; border-radius:10px; margin:2px; display:inline-block;">{tag}</span>'
+                               for tag in tags
+                            )
+
+                        openTargets_df["Tractability"] = openTargets_df["Tractability"].apply(format_tractability)
+
+                        st.markdown("### 💊 Genes con Tractabilidad (Open Targets)")
+
+                        # Crear la tabla HTML bonita
+                        html_ot_table = openTargets_df.to_html(escape=False, index=False)
+
+                        html_ot_scroll = f"""
+                            <div style="max-height: 500px; overflow-y: auto; overflow-x: auto;
+                                padding: 15px; border-radius: 10px;
+                                background-color: #ffffff; border: 1px solid #ddd; width: 100%;">
+                                {html_ot_table}
+                            </div>
+                        """
+
+                        st.markdown(html_ot_scroll, unsafe_allow_html=True)
+
+                        # --- Aquí generamos el gráfico de barras de tractabilidad ---
+
+                        # Explode para obtener cada tag en una fila
+                        tract_tags = openTargets_df["Tractability_raw"].explode()
+                        bio_tags = openTargets_df["Biotype_raw"].explode()
+
+                        # Contar frecuencia de cada tipo de tractabilidad
+                        tract_counts = tract_tags.value_counts().reset_index()
+                        tract_counts.columns = ["Tractability", "Count"]
+                        bio_counts = bio_tags.value_counts().reset_index()
+                        bio_counts.columns = ["Biotype", "Count"]
+
+                        # Crear gráfico de barras con plotly
+                        fig = px.bar(
+                            tract_counts,
+                            x="Tractability",
+                            y="Count",
+                            color="Count",
+                            color_continuous_scale="burg",
+                            title="Conteo de Genes por Tipo de Tractabilidad",
+                            labels={"Tractability": "Tipo de Tractabilidad", "Count": "Número de Genes"},
+                            height=500,
+                            width= 1000
+                        )
+
+                        st.plotly_chart(fig, use_container_width=True)
+                        
+                        fig = px.bar(
+                            bio_counts,
+                            x="Biotype",
+                            y="Count",
+                            color="Count",
+                            color_continuous_scale="blues",
+                            title="Conteo de Genes por Tipo de Biotype",
+                            labels={"Biotype": "Tipo de Biotype", "Count": "Número de Genes"},
+                            height=500,
+                            width= 1000
+                        )
+
+                        st.plotly_chart(fig, use_container_width=True)
+
+
+                        # Botón para descargar CSV
+                        st.download_button(
+                            "📥 Descargar resultados de Open Targets",
+                            openTargets_df.to_csv(index=False),
+                            "drug_target_genes.csv",
+                            "text/csv"
+                        )
+                    else:
+                        st.warning("⚠️ No se encontraron genes con tractabilidad en Open Targets.")
+
+                with st.spinner("🧠 Performing pathway analysis..."):
+                    number_pathways = st.text_input("🔍 Enter number of pathways to retrieve", value="10")
+                    if number_pathways:
+                        try:
+                           number_pathways = int(number_pathways)
+                           top_pathways, important_genes = analyze_pathways(df_selected, number_pathways)
+                           top_pathways["-log10(Adj P)"] = -np.log10(top_pathways["Adjusted P-value"])
+            
+            
+                           if top_pathways is not None:
+                              st.subheader("📈 Top Enriched Reactome Pathways")
+                              st.write(top_pathways[["Reactome Link", "Adjusted P-value", "-log10(Adj P)"]].to_html(escape=False, index=False), unsafe_allow_html=True)
+
+
+                              selected_pathway = st.selectbox(
+                                  "🔍 Select a pathway to see the top genes",
+                                  top_pathways["Term"].tolist(),
+                                  key="pathway"
+                               )
+
+                              pathway_genes = important_genes[important_genes["Gene Name"].isin(
+                                  top_pathways[top_pathways["Term"] == selected_pathway]["Genes"].iloc[0].split(";")
+                               )]
+    
+                              st.subheader(f"🔥 Important genes in pathway: {selected_pathway}")
+                              pathway_genes["Gene"] = pathway_genes["Gene"].apply(
+                                  lambda gene_id: f'<a href="https://www.ensembl.org/Multi/Search/Results?q={gene_id}" target="_blank">{gene_id}</a>'
+                              )
+                              st.write(pathway_genes.to_html(escape=False, index=False), unsafe_allow_html=True)
+                              st.download_button("📥 Download Important Genes CSV", pathway_genes.to_csv(index=False), "genes_pathway.csv", "text/csv")
+                        except ValueError:
+                           st.error("⚠️ Please enter a valid integer.")
+                            
+                    else:
+                        st.warning("⚠️ No enriched pathways found.")
 
