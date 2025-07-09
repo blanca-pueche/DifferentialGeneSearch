@@ -237,8 +237,8 @@ if mesh_id:
                     y="log_2 fold change",
                     color="log_2 fold change",
                     color_continuous_scale="sunset",
-                    title="Suma de log₂ fold change por Gene Name",
-                    labels={"Gene Name_raw": "Gene Name", "log_2 fold change": "Suma log₂ fold change"},
+                    title="Sum of log₂ fold change per gene",
+                    labels={"Gene Name_raw": "Gene Name", "log_2 fold change": "Sum of log₂ fold change"},
                     height=500,
                     width=2000
                 )
@@ -248,7 +248,7 @@ if mesh_id:
                          
                 
                 # Buscar genes con posible tractabilidad farmacológica
-                with st.spinner("🔍 Consultando Open Targets para posibles dianas..."):
+                with st.spinner("🔍 Checking Open Targets..."):
                     openTargets_results = df_selected["Gene"].apply(find_possible_target_of_drugs)
                     openTargets_df = pd.DataFrame([r for r in openTargets_results if r is not None])
 
@@ -259,9 +259,6 @@ if mesh_id:
 
                         openTargets_df = openTargets_df.sort_values(by="Gene Symbol")
 
-                        # Guardar la lista original de tags en otra columna para análisis
-                        openTargets_df["Tractability_raw"] = openTargets_df["Tractability"]
-                        openTargets_df["Biotype_raw"] = openTargets_df["Biotype"]
 
                         # Formatear para mostrar en la tabla con píldoras
                         def format_tractability(tags):
@@ -273,16 +270,18 @@ if mesh_id:
                             )
 
                         openTargets_df["Tractability"] = openTargets_df["Tractability"].apply(format_tractability)
+                        openTargets_df["Gene Symbol"] = openTargets_df["Gene Symbol"].apply(
+                            lambda x: f'<span title="{x}">{x[:10]}...</span>' if len(x) > 10 else x
+                        )
 
-                        st.markdown("### 💊 Genes con Tractabilidad (Open Targets)")
+
+                        st.markdown("### 💊 Genes with Tractability (Open Targets)")
 
                         # Crear la tabla HTML bonita
                         html_ot_table = openTargets_df.to_html(escape=False, index=False)
 
                         html_ot_scroll = f"""
-                            <div style="max-height: 500px; overflow-y: auto; overflow-x: auto;
-                                padding: 15px; border-radius: 10px;
-                                background-color: #ffffff; border: 1px solid #ddd; width: 100%;">
+                            <div style="max-height: 500px; overflow-y: auto;"">
                                 {html_ot_table}
                             </div>
                         """
@@ -290,6 +289,9 @@ if mesh_id:
                         st.markdown(html_ot_scroll, unsafe_allow_html=True)
 
                         # --- Aquí generamos el gráfico de barras de tractabilidad ---
+                        # Guardar la lista original de tags en otra columna para análisis
+                        openTargets_df["Tractability_raw"] = openTargets_df["Tractability"]
+                        openTargets_df["Biotype_raw"] = openTargets_df["Biotype"]
 
                         # Explode para obtener cada tag en una fila
                         tract_tags = openTargets_df["Tractability_raw"].explode()
@@ -308,9 +310,9 @@ if mesh_id:
                             y="Count",
                             color="Count",
                             color_continuous_scale="burg",
-                            title="Conteo de Genes por Tipo de Tractabilidad",
-                            labels={"Tractability": "Tipo de Tractabilidad", "Count": "Número de Genes"},
-                            height=500,
+                            title="Count of genes by Tractability",
+                            labels={"Tractability": "Type of tractability", "Count": "Number of genes"},
+                            height=700,
                             width= 1000
                         )
 
@@ -322,8 +324,8 @@ if mesh_id:
                             y="Count",
                             color="Count",
                             color_continuous_scale="blues",
-                            title="Conteo de Genes por Tipo de Biotype",
-                            labels={"Biotype": "Tipo de Biotype", "Count": "Número de Genes"},
+                            title="Count of genes by Biotype",
+                            labels={"Biotype": "Biotype", "Count": "Number of genes"},
                             height=500,
                             width= 1000
                         )
@@ -333,13 +335,13 @@ if mesh_id:
 
                         # Botón para descargar CSV
                         st.download_button(
-                            "📥 Descargar resultados de Open Targets",
+                            "📥 Download results from Open Targets",
                             openTargets_df.to_csv(index=False),
                             "drug_target_genes.csv",
                             "text/csv"
                         )
                     else:
-                        st.warning("⚠️ No se encontraron genes con tractabilidad en Open Targets.")
+                        st.warning("⚠️ No results found in Open Targets.")
 
                 with st.spinner("🧠 Performing pathway analysis..."):
                     number_pathways = st.text_input("🔍 Enter number of pathways to retrieve", value="10")
@@ -352,8 +354,18 @@ if mesh_id:
             
                            if top_pathways is not None:
                               st.subheader("📈 Top Enriched Reactome Pathways")
-                              st.write(top_pathways[["Reactome Link", "Adjusted P-value", "-log10(Adj P)"]].to_html(escape=False, index=False), unsafe_allow_html=True)
+                              #st.write(top_pathways[["Reactome Link", "Adjusted P-value", "-log10(Adj P)"]].to_html(escape=False, index=False), unsafe_allow_html=True)
 
+
+                              # Crear la tabla HTML bonita
+                              html_pathway_table = top_pathways[["Reactome Link", "Adjusted P-value", "-log10(Adj P)"]].to_html(escape=False, index=False)
+
+                              html_pathway_scroll = f"""
+                                 <div style="max-height: 500px; overflow-y: auto;">
+                                    {html_pathway_table}
+                                 </div>
+                              """
+                              st.markdown(html_pathway_scroll, unsafe_allow_html=True)
 
                               selected_pathway = st.selectbox(
                                   "🔍 Select a pathway to see the top genes",
@@ -369,7 +381,15 @@ if mesh_id:
                               pathway_genes["Gene"] = pathway_genes["Gene"].apply(
                                   lambda gene_id: f'<a href="https://www.ensembl.org/Multi/Search/Results?q={gene_id}" target="_blank">{gene_id}</a>'
                               )
-                              st.write(pathway_genes.to_html(escape=False, index=False), unsafe_allow_html=True)
+                              #st.write(pathway_genes.to_html(escape=False, index=False), unsafe_allow_html=True)
+                              html_genespathway_table = pathway_genes.to_html(escape=False, index=False)
+
+                              html_genespathway_scroll = f"""
+                                 <div style="max-height: 500px; overflow-y: auto;">
+                                    {html_genespathway_table}
+                                 </div>
+                              """
+                              st.markdown(html_genespathway_scroll, unsafe_allow_html=True)
                               st.download_button("📥 Download Important Genes CSV", pathway_genes.to_csv(index=False), "genes_pathway.csv", "text/csv")
                         except ValueError:
                            st.error("⚠️ Please enter a valid integer.")
