@@ -8,13 +8,23 @@ import seaborn as sns
 import numpy as np
 import urllib.parse
 import plotly.express as px
+import base64
 
 Entrez.email = "blanca.puechegranados@usp.ceu.es"
 GRAPHQL_URL = "https://dgidb.org/api/graphql"
 ENSEMBL_LOOKUP_URL = "https://rest.ensembl.org/lookup/id/"
 
+
 st.markdown("""
     <style>
+    .fixed-logo {
+        position: fixed;
+        top: 0;
+        left: 0;
+        padding: 5px;
+        z-index: 9999;
+        background: transparent;
+    }
     html, body, .stApp {
         width: 100%;
         margin: 0;
@@ -46,6 +56,18 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
+
+logo_placeholder = st.empty()
+logo_placeholder.markdown(
+    """
+    <div class="fixed-logo"></div>
+    """,
+    unsafe_allow_html=True
+)
+
+# Pero la imagen la ponemos con st.image(), para que Streamlit la maneje y respete tamaño
+st.image("https://upload.wikimedia.org/wikipedia/commons/7/7f/Logo_CNB.jpg", width=200)
+
 
 # Methods
 def get_disease_name(mesh_id):
@@ -152,22 +174,53 @@ def find_possible_target_of_drugs(ensembl_id):
     except:
         return None
     
+import urllib.parse
+import gseapy as gp
+
+import urllib.parse
+import gseapy as gp
+
+import urllib.parse
+import gseapy as gp
+
 def analyze_pathways(df, number):
-    gene_list = df["Gene Name"].dropna().unique().tolist()
-    enr = gp.enrichr(gene_list=gene_list, gene_sets="Reactome_2022", organism="Human", outdir=None)
+    # Obtener y normalizar la lista de genes
+    df_genes = df["Gene Name"].dropna().astype(str).str.strip().str.upper().unique().tolist()
+
+    # Ejecutar análisis de enriquecimiento
+    enr = gp.enrichr(gene_list=df_genes, gene_sets="Reactome_2022", organism="Human", outdir=None)
     if enr.results.empty:
         return None, None
-    top_pathways = enr.results.sort_values("Adjusted P-value").head(number)
 
+    top_pathways = enr.results.copy()
+
+    # Agregar enlace a Reactome
     top_pathways["Reactome Link"] = top_pathways["Term"].apply(
         lambda term: f'<a href="https://reactome.org/content/query?q={urllib.parse.quote(term)}" target="_blank">{term}</a>'
     )
 
-    top_pathway_genes = top_pathways.iloc[0]["Genes"].split(";")
-    important_genes = df[df["Gene Name"].isin(top_pathway_genes)].copy()
+    # Extraer numerador y denominador del Overlap
+    top_pathways[["Input Genes", "Pathway Genes"]] = top_pathways["Overlap"].str.split("/", expand=True).astype(int)
+
+    # Calcular porcentaje
+    top_pathways["Input %"] = top_pathways["Input Genes"] / top_pathways["Pathway Genes"] * 100
+
+    # Ordenar por porcentaje descendente
+    top_pathways = top_pathways.sort_values("Input %", ascending=False)
+
+    # Elegir los N primeros pathways
+    top_pathways = top_pathways.head(number)
+
+    # Obtener genes del primer pathway
+    top_pathway_genes = [g.strip().upper() for g in top_pathways.iloc[0]["Genes"].split(";")]
+    important_genes = df[df["Gene Name"].str.upper().isin(top_pathway_genes)].copy()
     important_genes["abs_fc"] = important_genes["log_2 fold change"].abs()
     important_genes = important_genes.sort_values("abs_fc", ascending=False)
+
     return top_pathways, important_genes
+
+
+
 
 def get_drug_targets_dgidb_graphql(gene_names):
     all_results = []
@@ -274,7 +327,7 @@ if mesh_id:
         with st.spinner("Mapping Ensembl IDs to gene names..."):
             df_selected = fetch_gene_names(df_raw)
         
-        # Convert the Ensembl gene IDs into HTML links
+        # Step 4: Obtain Ensembl ID with links for the genes
         df_selected_with_links = df_selected.copy()
         df_selected_with_links["Gene"] = df_selected_with_links["Gene"].apply(
             lambda gene_id: f'<a href="https://www.ensembl.org/Multi/Search/Results?q={gene_id}" target="_blank">{gene_id}</a>'
@@ -283,20 +336,17 @@ if mesh_id:
         
         st.markdown("# Gene Table with Links to Ensembl")
 
-        # Crear la tabla HTML con escape=False para mantener los links
         html_table = df_selected_with_links.to_html(escape=False, index=False)
 
-        # Envolver la tabla en un div con scroll y altura fija
+        #scroll
         html_with_scroll = f"""
             <div style="max-height: 400px; overflow-y: auto;">
                 {html_table}
             </div>
             """
 
-        # Mostrar la tabla con scroll y permitiendo HTML
         st.markdown(html_with_scroll, unsafe_allow_html=True)
 
-        # Botón para descargar CSV
         st.download_button(
             "📥 Download Genes CSV",
             df_selected_with_links.to_csv(index=False),
@@ -304,13 +354,12 @@ if mesh_id:
             "text/csv"
         )
         
-        # Crear una copia para conservar los datos originales si es necesario
         df_selected["Gene Name_raw"] = df_selected["Gene Name"]
 
-        # Agrupar por "Gene Name" y sumar los valores de "log_2 fold change"
         gname_fc = df_selected.groupby("Gene Name_raw", as_index=False)["log_2 fold change"].sum()
+        gname_fc = gname_fc.sort_values("log_2 fold change", ascending=False)
 
-        # Crear gráfico de barras con plotly
+        # Graph for the genes and their log2 fold change
         fig = px.bar(
             gname_fc,
             x="Gene Name_raw",
@@ -325,22 +374,18 @@ if mesh_id:
 
         st.plotly_chart(fig, use_container_width=True)
 
-                    
         
-        # Buscar genes con posible tractabilidad farmacológica
+        # Step 5: Search biotype and tractability for the genes in Open Targets
         with st.spinner("Checking Open Targets..."):
             openTargets_results = df_selected["Gene"].apply(find_possible_target_of_drugs)
             openTargets_df = pd.DataFrame([r for r in openTargets_results if r is not None])
 
         if not openTargets_df.empty:
-            # Eliminar la columna "Name" si existe
             if "Name" in openTargets_df.columns:
                 openTargets_df = openTargets_df.drop(columns=["Name"])
 
                 openTargets_df = openTargets_df.sort_values(by="Gene Symbol")
 
-
-                # Formatear para mostrar en la tabla con píldoras
                 def format_tractability(tags):
                     if not tags:
                         return ""
@@ -357,7 +402,7 @@ if mesh_id:
 
                 st.markdown("# Genes with Tractability (Open Targets)")
 
-                # Crear la tabla HTML bonita
+                #scroll
                 html_ot_table = openTargets_df.to_html(escape=False, index=False)
 
                 html_ot_scroll = f"""
@@ -368,30 +413,25 @@ if mesh_id:
 
                 st.markdown(html_ot_scroll, unsafe_allow_html=True)
                 
-                # Botón para descargar CSV
                 st.download_button(
                     "📥 Download results from Open Targets",
                     openTargets_df.to_csv(index=False),
-                    "drug_target_genes.csv",
+                    "openTargets_genes.csv",
                     "text/csv"
                 )
 
-                # --- Aquí generamos el gráfico de barras de tractabilidad ---
-                # Guardar la lista original de tags en otra columna para análisis
                 openTargets_df["Tractability_raw"] = openTargets_df["Tractability"]
                 openTargets_df["Biotype_raw"] = openTargets_df["Biotype"]
 
-                # Explode para obtener cada tag en una fila
                 tract_tags = openTargets_df["Tractability_raw"].explode()
                 bio_tags = openTargets_df["Biotype_raw"].explode()
 
-                # Contar frecuencia de cada tipo de tractabilidad
                 tract_counts = tract_tags.value_counts().reset_index()
                 tract_counts.columns = ["Tractability", "Count"]
                 bio_counts = bio_tags.value_counts().reset_index()
                 bio_counts.columns = ["Biotype", "Count"]
 
-                # Crear gráfico de barras con plotly
+                # Tractability graph
                 fig = px.bar(
                     tract_counts,
                     x="Tractability",
@@ -406,6 +446,7 @@ if mesh_id:
                 fig.update_xaxes(showticklabels=False)
                 st.plotly_chart(fig, use_container_width=True)
                 
+                # Biotype graph
                 fig = px.bar(
                     bio_counts,
                     x="Biotype",
@@ -425,6 +466,8 @@ if mesh_id:
 
         
         with st.spinner("Performing pathway analysis..."):
+            
+            # Step 6: Search pathways for the genes
             st.markdown("# Top Enriched Reactome Pathways")
             number_pathways = st.text_input("🔍 Enter number of pathways to retrieve", value="10")
             if number_pathways:
@@ -435,11 +478,7 @@ if mesh_id:
 
 
                     if top_pathways is not None:
-                        #st.write(top_pathways[["Reactome Link", "Adjusted P-value", "-log10(Adj P)"]].to_html(escape=False, index=False), unsafe_allow_html=True)
-
-
-                        # Crear la tabla HTML bonita
-                        html_pathway_table = top_pathways[["Reactome Link", "Adjusted P-value", "-log10(Adj P)"]].to_html(escape=False, index=False)
+                        html_pathway_table = top_pathways[["Reactome Link", "Adjusted P-value", "-log10(Adj P)", "Overlap", "Input %"]].to_html(escape=False, index=False)
 
                         html_pathway_scroll = f"""
                             <div style="max-height: 500px; overflow-y: auto;">
@@ -447,7 +486,7 @@ if mesh_id:
                             </div>
                         """
                         st.markdown(html_pathway_scroll, unsafe_allow_html=True)
-                                  
+                                    
                         st.markdown("# Important genes in pathway: ")
                         selected_pathway = st.selectbox(
                             "🔍 Select a pathway to see the top genes",
@@ -463,7 +502,6 @@ if mesh_id:
                         pathway_genes["Gene"] = pathway_genes["Gene"].apply(
                             lambda gene_id: f'<a href="https://www.ensembl.org/Multi/Search/Results?q={gene_id}" target="_blank">{gene_id}</a>'
                         )
-                        #st.write(pathway_genes.to_html(escape=False, index=False), unsafe_allow_html=True)
                         html_genespathway_table = pathway_genes.to_html(escape=False, index=False)
 
                         html_genespathway_scroll = f"""
@@ -559,14 +597,57 @@ if mesh_id:
                         })
 
                         # Layout: dos columnas
-                        col1, col2 = st.columns([1, 1.8])
+                        col1, col2 = st.columns([1.5, 1.8])
 
                         with col1:
-                            st.plotly_chart(pie_fig, use_container_width=True)
+                            st.plotly_chart(pie_fig)
 
                         with col2:
                             st.markdown("**Gene–Drug Interactions by Interaction Type**")
                             st.dataframe(interaction_wide, use_container_width=True)
+                            
+                        # -- Merge all data into a full report table --
+
+                        # First, clean and prepare dataframes
+                        merged = df_selected.copy()
+
+                        # Merge with Open Targets
+                        if not openTargets_df.empty:
+                            ot_clean = openTargets_df.copy()
+                            ot_clean["Tractability"] = ot_clean["Tractability"].str.replace(r'<.*?>', '', regex=True)
+                            merged = pd.merge(merged, ot_clean.drop(columns=["Biotype_raw"]), how="left", left_on="Gene Name", right_on="Gene Symbol")
+
+                        # Merge with pathway genes (optional: only if pathway is selected)
+                        if not important_genes.empty:
+                            merged = pd.merge(merged, important_genes[["Gene", "abs_fc"]], on="Gene", how="left")
+
+                        # Merge with drug interactions
+                        if not drug_df.empty:
+                            drug_clean = drug_df.copy()
+                            drug_summary = drug_clean.groupby("Gene").agg({
+                                "Drug": lambda x: "; ".join(sorted(set(x))),
+                                "Interaction Type": lambda x: "; ".join(sorted(set(x))),
+                                "PMID": lambda x: "; ".join(sorted(set(str(p) for p in x if p != 'N/A'))),
+                                "Interaction Score": "mean"
+                            }).reset_index()
+                            merged = pd.merge(merged, drug_summary, how="left", left_on="Gene Name", right_on="Gene")
+                        if not top_pathways.empty:
+                            merged = pd.merge(merged, pathway_genes, how ="left", on="Gene Name")
+
+                        # Optional: reorder columns
+                        merged = merged.drop(columns=["Gene Symbol", "Gene_y", "Tractability_raw"], errors="ignore")
+                        merged = merged.rename(columns={"Gene_x": "Gene"})
+
+                        # Show and offer download
+                        st.markdown("## 📦 Download Full Results Table")
+                        st.dataframe(merged, use_container_width=True)
+
+                        st.download_button(
+                            "📥 Download Full Combined CSV",
+                            merged.to_csv(index=False),
+                            "full_results_table.csv",
+                            "text/csv"
+                        )
                     else:
                         st.info("No 'Interaction Type' column found.")
 
