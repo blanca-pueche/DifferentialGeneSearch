@@ -30,7 +30,7 @@ st.markdown("""
         margin: 0;
         padding: 0;
         overflow-x: hidden;
-        font-size: 19px;
+        font-size: 18px;
     }
     .block-container {
         max-width: 80% !important;
@@ -631,12 +631,21 @@ if mesh_id:
                                 "Interaction Score": "mean"
                             }).reset_index()
                             merged = pd.merge(merged, drug_summary, how="left", left_on="Gene Name", right_on="Gene")
+                        
                         if not top_pathways.empty:
+                            pathway_genes_unique = pathway_genes[["Gene Name"]].drop_duplicates()
+                            pathway_genes_unique["Pathway Match"] = True
                             merged = pd.merge(merged, pathway_genes, how ="left", on="Gene Name")
+                        
+                        #Delete duplicated columns
+                        merged = merged.drop(columns=["Gene_y", "Gene Symbol", "Tractability_raw", "Gene Name_raw_x", "Gene Name_raw_y", "abs_fc_y", "log_2 fold change_y"], errors="ignore")
+                        merged = merged.rename(columns={"Gene_x": "Gene", "abs_fc_x" : "abs_fc"})
+                        dupes = merged.columns[merged.columns.duplicated()].tolist()
+                        merged = merged.loc[:, ~merged.columns.duplicated(keep="first")]
 
                         # Optional: reorder columns
-                        merged = merged.drop(columns=["Gene Symbol", "Gene_y", "Tractability_raw"], errors="ignore")
-                        merged = merged.rename(columns={"Gene_x": "Gene"})
+                        #merged = merged.drop(columns=["Gene Symbol", "Gene_y", "Tractability_raw"], errors="ignore")
+                        #merged = merged.rename(columns={"Gene_x": "Gene"})
 
                         # Show and offer download
                         st.markdown("## 📦 Download Full Results Table")
