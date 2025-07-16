@@ -177,47 +177,54 @@ def find_possible_target_of_drugs(ensembl_id):
 import urllib.parse
 import gseapy as gp
 
-import urllib.parse
-import gseapy as gp
-
-import urllib.parse
-import gseapy as gp
-
 def analyze_pathways(df, number):
-    # Obtener y normalizar la lista de genes
+    # Prepare gene list
     df_genes = df["Gene Name"].dropna().astype(str).str.strip().str.upper().unique().tolist()
 
-    # Ejecutar análisis de enriquecimiento
+    # Enrichment
     enr = gp.enrichr(gene_list=df_genes, gene_sets="Reactome_2022", organism="Human", outdir=None)
     if enr.results.empty:
         return None, None
 
     top_pathways = enr.results.copy()
 
-    # Agregar enlace a Reactome
+    # Add Reactome links
     top_pathways["Reactome Link"] = top_pathways["Term"].apply(
         lambda term: f'<a href="https://reactome.org/content/query?q={urllib.parse.quote(term)}" target="_blank">{term}</a>'
     )
 
-    # Extraer numerador y denominador del Overlap
+    # Parse overlap info
     top_pathways[["Input Genes", "Pathway Genes"]] = top_pathways["Overlap"].str.split("/", expand=True).astype(int)
-
-    # Calcular porcentaje
     top_pathways["Input %"] = top_pathways["Input Genes"] / top_pathways["Pathway Genes"] * 100
+    top_pathways = top_pathways.sort_values("Input %", ascending=False).head(number)
 
-    # Ordenar por porcentaje descendente
-    top_pathways = top_pathways.sort_values("Input %", ascending=False)
+    # Sum log2fc for overlapping genes per pathway
+    df["Gene Name"] = df["Gene Name"].astype(str).str.strip().str.upper()
+    sum_fc = []
+    for _, row in top_pathways.iterrows():
+        genes = [g.strip().upper() for g in row["Genes"].split(";")]
+        overlap_df = df[df["Gene Name"].isin(genes)]
+        sum_fc.append(overlap_df["log_2 fold change"].sum())
 
-    # Elegir los N primeros pathways
-    top_pathways = top_pathways.head(number)
+    top_pathways["Sum log2fc"] = sum_fc
 
-    # Obtener genes del primer pathway
-    top_pathway_genes = [g.strip().upper() for g in top_pathways.iloc[0]["Genes"].split(";")]
-    important_genes = df[df["Gene Name"].str.upper().isin(top_pathway_genes)].copy()
-    important_genes["abs_fc"] = important_genes["log_2 fold change"].abs()
-    important_genes = important_genes.sort_values("abs_fc", ascending=False)
+    return top_pathways
 
-    return top_pathways, important_genes
+def get_overlapping_genes(df, selected_pathway_row):
+    # Normalize input genes
+    df["Gene Name"] = df["Gene Name"].astype(str).str.strip().str.upper()
+
+    # Get genes from selected pathway
+    pathway_genes = [g.strip().upper() for g in selected_pathway_row["Genes"].split(";")]
+
+    # Get overlapping genes from input
+    overlap_df = df[df["Gene Name"].isin(pathway_genes)].copy()
+    overlap_df["abs_fc"] = overlap_df["log_2 fold change"].abs()
+    overlap_df = overlap_df.sort_values("abs_fc", ascending=False)
+
+    return overlap_df
+
+
 
 
 
@@ -597,12 +604,12 @@ if mesh_id:
             if number_pathways:
                 try:
                     number_pathways = int(number_pathways)
-                    top_pathways, important_genes = analyze_pathways(df_selected, number_pathways)
+                    top_pathways = analyze_pathways(df_selected, number_pathways)
                     top_pathways["-log10(Adj P)"] = -np.log10(top_pathways["Adjusted P-value"])
 
 
                     if top_pathways is not None:
-                        html_pathway_table = top_pathways[["Reactome Link", "Adjusted P-value", "-log10(Adj P)", "Overlap", "Input %"]].to_html(escape=False, index=False)
+                        html_pathway_table = top_pathways[["Reactome Link", "Adjusted P-value", "-log10(Adj P)", "Overlap", "Input %", "Sum log2fc"]].to_html(escape=False, index=False)
 
                         html_pathway_scroll = f"""
                             <div style="max-height: 500px; overflow-y: auto;">
@@ -618,14 +625,21 @@ if mesh_id:
                             key="pathway"
                         )
 
-                        pathway_genes = important_genes[important_genes["Gene Name"].isin(
-                            top_pathways[top_pathways["Term"] == selected_pathway]["Genes"].iloc[0].split(";")
-                        )]
+                        # Get full row of selected pathway
+                        selected_pathway_row = top_pathways[top_pathways["Term"] == selected_pathway].iloc[0]
 
+                        # Get overlapping genes for that pathway
+                        pathway_genes = get_overlapping_genes(df_selected, selected_pathway_row)
+
+                        # Display pathway name
                         st.subheader(f"{selected_pathway}")
-                        pathway_genes["Gene"] = pathway_genes["Gene"].apply(
+
+                        # Turn Gene IDs into Ensembl search links
+                        pathway_genes["Gene Name"] = pathway_genes["Gene Name"].apply(
                             lambda gene_id: f'<a href="https://www.ensembl.org/Multi/Search/Results?q={gene_id}" target="_blank">{gene_id}</a>'
                         )
+
+                        # Render HTML table with scroll
                         html_genespathway_table = pathway_genes.to_html(escape=False, index=False)
 
                         html_genespathway_scroll = f"""
@@ -633,6 +647,7 @@ if mesh_id:
                             {html_genespathway_table}
                             </div>
                         """
+
                         st.markdown(html_genespathway_scroll, unsafe_allow_html=True)
                         st.download_button("📥 Download Important Genes CSV", pathway_genes.to_csv(index=False), "genes_pathway.csv", "text/csv")
                 except ValueError:
@@ -646,11 +661,10 @@ if mesh_id:
                     top_pathways["Term"].tolist(),
                     key="drugs"
                     )
-                    
-                    pathway_genes = important_genes[important_genes["Gene Name"].isin(
-                        top_pathways[top_pathways["Term"] == selected_pathway]["Genes"].iloc[0].split(";")
-                    )]
-                                    
+                    selected_pathway_row = top_pathways[top_pathways["Term"] == selected_pathway].iloc[0]
+
+                    pathway_genes = get_overlapping_genes(df_selected, selected_pathway_row)
+                    print(pathway_genes["Gene Name"].to_list())
                     drug_df = get_drug_targets_dgidb_graphql(pathway_genes["Gene Name"].tolist())
 
                 if not drug_df.empty:
@@ -742,8 +756,8 @@ if mesh_id:
                             merged = pd.merge(merged, ot_clean.drop(columns=["Biotype_raw"]), how="left", left_on="Gene Name", right_on="Gene Symbol")
 
                         # Merge with pathway genes (optional: only if pathway is selected)
-                        if not important_genes.empty:
-                            merged = pd.merge(merged, important_genes[["Gene", "abs_fc"]], on="Gene", how="left")
+                        if not pathway_genes.empty:
+                            merged = pd.merge(merged, pathway_genes[["Gene", "abs_fc"]], on="Gene", how="left")
 
                         # Merge with drug interactions
                         if not drug_df.empty:
