@@ -296,8 +296,76 @@ def drug_with_links(df):
 
 st.title("Disease-Gene-Drug Analysis Dashboard")
 
-# Step 1: Ask for e-mail
-email = st.text_input("Enter user e-mail:")
+import streamlit as st
+
+# Estilo y layout del label con tooltip
+st.markdown("""
+<style>
+.email-label-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  font-size: 16px;
+  margin-bottom: -10px;
+}
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+  font-size: 14px;
+  vertical-align: middle;
+  cursor: pointer;
+  color: #1E90FF;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 280px;
+  background-color: #555;
+  color: #fff;
+  text-align: left;
+  border-radius: 6px;
+  padding: 6px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;  /* aparece encima del icono */
+  left: 50%;
+  margin-left: -140px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip .tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+</style>
+
+<div class="email-label-wrapper">
+  <span>Enter user e-mail:</span>
+  <div class="tooltip">ℹ
+    <span class="tooltiptext">
+      Se necesita el correo electrónico para hacer búsquedas en Entrez.
+    </span>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+# Campo de texto sin label visible, pero con accesibilidad
+email = st.text_input("Correo electrónico", key="user_email", label_visibility="collapsed")
+
 
 #Step 2: Name from MeshID
 mesh_id = st.text_input("🔍 Enter MeSH ID (e.g., D003920 for Diabetes Mellitus):")
@@ -334,19 +402,75 @@ if mesh_id:
         )
         df_selected_with_links = df_selected_with_links.sort_values(by="log_2 fold change", ascending=False)
         
-        st.markdown("# Gene Table with Links to Ensembl")
+        import streamlit.components.v1 as components
 
-        html_table = df_selected_with_links.to_html(escape=False, index=False)
+        # Título
+        st.markdown("## Gene Table with Links to Ensembl")
 
-        #scroll
-        html_with_scroll = f"""
-            <div style="max-height: 400px; overflow-y: auto;">
-                {html_table}
-            </div>
-            """
+        # Convertir tu dataframe a HTML (como antes)
+        html_table = df_selected_with_links.to_html(escape=False, index=False, table_id="geneTable")
 
-        st.markdown(html_with_scroll, unsafe_allow_html=True)
+        # Código HTML con CSS fijo en blanco/negro
+        html_code = f"""
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
+        <style>
+        /* Fuerza fondo blanco y texto negro */
+        #geneTable, #geneTable thead, #geneTable tbody, #geneTable tr, #geneTable td, #geneTable th {{
+            background-color: white !important;
+            color: black !important;
+            border-color: #ccc !important;
+        }}
+
+        #geneTable input {{
+            background-color: white !important;
+            color: black !important;
+            border: 1px solid #ccc !important;
+        }}
+
+        .dataTables_wrapper {{
+            color: black !important;
+        }}
+
+        div.dataTables_wrapper div.dataTables_paginate, 
+        div.dataTables_wrapper div.dataTables_info {{
+            color: black !important;
+        }}
+        </style>
+
+        <script>
+        $(document).ready(function() {{
+            $('#geneTable thead tr').clone(true).appendTo('#geneTable thead');
+            $('#geneTable thead tr:eq(1) th').each(function(i) {{
+                var title = $(this).text();
+                $(this).html('<input type="text" placeholder="Search ' + title + '" />');
+
+                $('input', this).on('keyup change', function () {{
+                    if (table.column(i).search() !== this.value) {{
+                        table.column(i).search(this.value).draw();
+                    }}
+                }});
+            }});
+
+            var table = $('#geneTable').DataTable({{
+                scrollY: '400px',
+                scrollCollapse: true,
+                paging: true,
+                orderCellsTop: true,
+                fixedHeader: true,
+                searching: false
+            }});
+        }});
+        </script>
+
+        <div style="overflow-x:auto">
+        {html_table}
+        </div>
+        """
+        # Mostrar tabla con colores forzados
+        components.html(html_code, height=650, scrolling=True)
         st.download_button(
             "📥 Download Genes CSV",
             df_selected_with_links.to_csv(index=False),
