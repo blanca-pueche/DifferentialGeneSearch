@@ -65,12 +65,15 @@ logo_placeholder.markdown(
     unsafe_allow_html=True
 )
 
-# Pero la imagen la ponemos con st.image(), para que Streamlit la maneje y respete tamaño
+# Image set with st.image() 
 st.image("https://upload.wikimedia.org/wikipedia/commons/7/7f/Logo_CNB.jpg", width=200)
 
 
 # Methods
 def get_disease_name(mesh_id):
+    """
+    Returns the corresponding name of a disease given a MESH id provided by the user. 
+    """
     try:
         search_handle = Entrez.esearch(db="mesh", term=mesh_id)
         search_record = Entrez.read(search_handle)
@@ -86,6 +89,9 @@ def get_disease_name(mesh_id):
         return None
     
 def generate_expression_atlas_link(disease_name):
+    """
+    Generates link to Expression Atlas for a given disease to extract gene information. 
+    """
     encoded_disease = urllib.parse.quote(disease_name)
     base_url = (
         "https://www.ebi.ac.uk/gxa/search?geneQuery=%5B%5D"
@@ -98,6 +104,9 @@ def generate_expression_atlas_link(disease_name):
     return base_url
 
 def get_gene_name_from_ensembl(ensembl_id):
+    """
+    Given an ensembl id it extracts the corresponding gene name.
+    """
     response = requests.get(f"{ENSEMBL_LOOKUP_URL}{ensembl_id}?content-type=application/json")
     if response.status_code == 200:
         data = response.json()
@@ -105,6 +114,10 @@ def get_gene_name_from_ensembl(ensembl_id):
     return "Not Found"
 
 def fetch_gene_names(df):
+    """
+    Fetches gene names from ensembl and groups them according to log_2 fold change.
+    """
+
     df["Gene Name"] = df["Gene"].apply(get_gene_name_from_ensembl)
     df_filtered = df[df["Gene Name"] != "Not Found"]
 
@@ -178,6 +191,9 @@ import urllib.parse
 import gseapy as gp
 
 def analyze_pathways(df, number):
+    """
+    Analyzes n (given number) pathways in which the the genes interact.
+    """
     # Prepare gene list
     df_genes = df["Gene Name"].dropna().astype(str).str.strip().str.upper().unique().tolist()
 
@@ -211,6 +227,9 @@ def analyze_pathways(df, number):
     return top_pathways
 
 def get_overlapping_genes(df, selected_pathway_row):
+    """
+    Get overlapped genes as a way to identify most important genes in a given specific pathway
+    """
     # Normalize input genes
     df["Gene Name"] = df["Gene Name"].astype(str).str.strip().str.upper()
 
@@ -226,10 +245,16 @@ def get_overlapping_genes(df, selected_pathway_row):
 
 
 
-
-
-
 def get_drug_targets_dgidb_graphql(gene_names):
+
+    """
+    Queries the DGIdb GraphQL API for drug–gene interaction data for a list of gene names.
+
+    For each gene, the function retrieves associated drugs, interaction types, 
+    directionality, interaction scores, sources, and PMIDs (if available), 
+    and compiles the results into a pandas DataFrame.
+    """
+
     all_results = []
     for gene_name in gene_names:
         graphql_query = f"""
@@ -305,7 +330,7 @@ st.title("Disease-Gene-Drug Analysis Dashboard")
 
 import streamlit as st
 
-# Estilo y layout del label con tooltip
+# Style and layout (tooltip)
 st.markdown("""
 <style>
 .email-label-wrapper {
@@ -370,7 +395,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Campo de texto sin label visible, pero con accesibilidad
+#Step 1: Text input (no visible label but accessibility provided)
 email = st.text_input("Correo electrónico", key="user_email", label_visibility="collapsed")
 
 
@@ -411,13 +436,13 @@ if mesh_id:
         
         import streamlit.components.v1 as components
 
-        # Título
+        # Title
         st.markdown("## Gene Table with Links to Ensembl")
 
-        # Convertir tu dataframe a HTML (como antes)
+        # Conversion of dataframe to HTML
         html_table = df_selected_with_links.to_html(escape=False, index=False, table_id="geneTable")
 
-        # Código HTML con CSS fijo en blanco/negro
+        # HTML code with CSS fixed in black and white
         html_code = f"""
         <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -476,7 +501,7 @@ if mesh_id:
         {html_table}
         </div>
         """
-        # Mostrar tabla con colores forzados
+        # Display table
         components.html(html_code, height=650, scrolling=True)
         st.download_button(
             "📥 Download Genes CSV",
@@ -490,7 +515,7 @@ if mesh_id:
         gname_fc = df_selected.groupby("Gene Name_raw", as_index=False)["log_2 fold change"].sum()
         gname_fc = gname_fc.sort_values("log_2 fold change", ascending=False)
 
-        # Graph for the genes and their log2 fold change
+        # Graph for genes and their log2 fold change
         fig = px.bar(
             gname_fc,
             x="Gene Name_raw",
@@ -673,7 +698,7 @@ if mesh_id:
         
                     #st.write(drug_df_with_links.to_html(escape=False, index=False), unsafe_allow_html=True)
                     
-                    # Crear la tabla HTML bonita
+                    # HTML table
                     html_drug_table = drug_df_with_links.to_html(escape=False, index=False)
 
                     html_drug_scroll = f"""
@@ -721,20 +746,20 @@ if mesh_id:
                             hole=0.4
                         )
 
-                        # Agrupar relaciones por tipo
+                        # Group by type of interaction
                         interaction_grouped = (
                             drug_df.groupby('Interaction Type')
                             .apply(lambda df: [f"{g} → {d}" for g, d in zip(df['Gene'], df['Drug'])])
                         )
 
-                        # Convertir a DataFrame con columnas por tipo de interacción
+                        # Convert to DataFrame with columns according to interaction type
                         max_len = interaction_grouped.map(len).max()
                         interaction_wide = pd.DataFrame({
-                            interaction_type: values + [""] * (max_len - len(values))  # rellenar con "" para igualar longitudes
+                            interaction_type: values + [""] * (max_len - len(values))  
                             for interaction_type, values in interaction_grouped.items()
                         })
 
-                        # Layout: dos columnas
+                        # Layout: 2 columns
                         col1, col2 = st.columns([1.5, 1.8])
 
                         with col1:
@@ -743,6 +768,7 @@ if mesh_id:
                         with col2:
                             st.markdown("**Gene–Drug Interactions by Interaction Type**")
                             st.dataframe(interaction_wide, use_container_width=True)
+
                             
                         # -- Merge all data into a full report table --
 
