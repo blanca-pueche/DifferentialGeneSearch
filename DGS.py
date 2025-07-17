@@ -9,6 +9,7 @@ import numpy as np
 import urllib.parse
 import plotly.express as px
 import base64
+from collections import defaultdict
 
 Entrez.email = "blanca.puechegranados@usp.ceu.es"
 GRAPHQL_URL = "https://dgidb.org/api/graphql"
@@ -748,9 +749,10 @@ if mesh_id:
 
                         # Group by type of interaction
                         interaction_grouped = (
-                            drug_df.groupby('Interaction Type')
+                            drug_df.groupby('Interaction Type', group_keys=False)
                             .apply(lambda df: [f"{g} → {d}" for g, d in zip(df['Gene'], df['Drug'])])
                         )
+                        
 
                         # Convert to DataFrame with columns according to interaction type
                         max_len = interaction_grouped.map(len).max()
@@ -767,60 +769,8 @@ if mesh_id:
 
                         with col2:
                             st.markdown("**Gene–Drug Interactions by Interaction Type**")
-                            st.dataframe(interaction_wide, use_container_width=True)
-
-                            
-                        # -- Merge all data into a full report table --
-
-                        # First, clean and prepare dataframes
-                        merged = df_selected.copy()
-
-                        # Merge with Open Targets
-                        if not openTargets_df.empty:
-                            ot_clean = openTargets_df.copy()
-                            ot_clean["Tractability"] = ot_clean["Tractability"].str.replace(r'<.*?>', '', regex=True)
-                            merged = pd.merge(merged, ot_clean.drop(columns=["Biotype_raw"]), how="left", left_on="Gene Name", right_on="Gene Symbol")
-
-                        # Merge with pathway genes (optional: only if pathway is selected)
-                        if not pathway_genes.empty:
-                            merged = pd.merge(merged, pathway_genes[["Gene", "abs_fc"]], on="Gene", how="left")
-
-                        # Merge with drug interactions
-                        if not drug_df.empty:
-                            drug_clean = drug_df.copy()
-                            drug_summary = drug_clean.groupby("Gene").agg({
-                                "Drug": lambda x: "; ".join(sorted(set(x))),
-                                "Interaction Type": lambda x: "; ".join(sorted(set(x))),
-                                "PMID": lambda x: "; ".join(sorted(set(str(p) for p in x if p != 'N/A'))),
-                                "Interaction Score": "mean"
-                            }).reset_index()
-                            merged = pd.merge(merged, drug_summary, how="left", left_on="Gene Name", right_on="Gene")
+                            st.dataframe(interaction_wide, use_container_width=True)              
                         
-                        if not top_pathways.empty:
-                            pathway_genes_unique = pathway_genes[["Gene Name"]].drop_duplicates()
-                            pathway_genes_unique["Pathway Match"] = True
-                            merged = pd.merge(merged, pathway_genes, how ="left", on="Gene Name")
-                        
-                        #Delete duplicated columns
-                        merged = merged.drop(columns=["Gene_y", "Gene Symbol", "Tractability_raw", "Gene Name_raw_x", "Gene Name_raw_y", "abs_fc_y", "log_2 fold change_y"], errors="ignore")
-                        merged = merged.rename(columns={"Gene_x": "Gene", "abs_fc_x" : "abs_fc"})
-                        dupes = merged.columns[merged.columns.duplicated()].tolist()
-                        merged = merged.loc[:, ~merged.columns.duplicated(keep="first")]
-
-                        # Optional: reorder columns
-                        #merged = merged.drop(columns=["Gene Symbol", "Gene_y", "Tractability_raw"], errors="ignore")
-                        #merged = merged.rename(columns={"Gene_x": "Gene"})
-
-                        # Show and offer download
-                        st.markdown("## 📦 Download Full Results Table")
-                        st.dataframe(merged, use_container_width=True)
-
-                        st.download_button(
-                            "📥 Download Full Combined CSV",
-                            merged.to_csv(index=False),
-                            "full_results_table.csv",
-                            "text/csv"
-                        )
                     else:
                         st.info("No 'Interaction Type' column found.")
 
@@ -829,4 +779,64 @@ if mesh_id:
                     
             else:
                 st.warning("No enriched pathways found.")
+        # -- Merge all data into a full report table --
 
+        # First, clean and prepare dataframes
+        merged = df_selected.copy()
+
+        # Merge with Open Targets
+        if not openTargets_df.empty:
+           ot_clean = openTargets_df.copy()
+           ot_clean["Tractability"] = ot_clean["Tractability"].str.replace(r'<.*?>', '', regex=True)
+           merged = pd.merge(merged, ot_clean.drop(columns=["Biotype_raw"]), how="left", left_on="Gene Name", right_on="Gene Symbol")
+
+           # Merge with pathway genes (optional: only if pathway is selected)
+           if not pathway_genes.empty:
+              merged = pd.merge(merged, pathway_genes[["Gene", "abs_fc"]], on="Gene", how="left")
+
+              # Merge with drug interactions
+              if not drug_df.empty:
+                 drug_clean = drug_df.copy()
+                 drug_summary = drug_clean.groupby("Gene").agg({
+                     "Drug": lambda x: "; ".join(sorted(set(x))),
+                     "Interaction Type": lambda x: "; ".join(sorted(set(x))),
+                     "PMID": lambda x: "; ".join(sorted(set(str(p) for p in x if p != 'N/A'))),
+                     "Interaction Score": "mean"
+                     }).reset_index()
+                 merged = pd.merge(merged, drug_summary, how="left", left_on="Gene Name", right_on="Gene")
+                        
+                 if not top_pathways.empty:
+                    pathway_genes_unique = pathway_genes[["Gene Name"]].drop_duplicates()
+                    pathway_genes_unique["Pathway Match"] = True
+                    merged = pd.merge(merged, pathway_genes, how ="left", on="Gene Name")
+                        
+                 #Delete duplicated columns
+                 merged = merged.drop(columns=["Gene_y", "Gene Symbol", "Tractability_raw", "Gene Name_raw_x", "Gene Name_raw_y", "abs_fc_y", "log_2 fold change_y"], errors="ignore")
+                 merged = merged.rename(columns={"Gene_x": "Gene", "abs_fc_x" : "abs_fc"})
+                 dupes = merged.columns[merged.columns.duplicated()].tolist()
+                 merged = merged.loc[:, ~merged.columns.duplicated(keep="first")]
+
+                 #Add pathways in which gene interacts
+                 gene_to_pathways = defaultdict(list)
+
+                 if not top_pathways.empty:
+                    for _, row in top_pathways.iterrows():
+                        pathway_name = row["Term"]
+                        genes_in_pathway = [g.strip().upper() for g in row["Genes"].split(";")]
+                        for gene in genes_in_pathway:
+                            gene_to_pathways[gene].append(pathway_name)
+
+                 merged["Gene Name"] = merged["Gene Name"].astype(str).str.strip().str.upper()
+                 merged["Pathways"] = merged["Gene Name"].apply(lambda g: "; ".join(gene_to_pathways.get(g, [])))
+
+
+                 # Show and offer download
+                 st.markdown("## 📦 Download Full Results Table")
+                 st.dataframe(merged, use_container_width=True)
+
+                 st.download_button(
+                    "📥 Download Full Combined CSV",
+                    merged.to_csv(index=False),
+                    "full_results_table.csv",
+                    "text/csv"
+                 )
