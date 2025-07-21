@@ -790,53 +790,95 @@ if mesh_id:
            ot_clean["Tractability"] = ot_clean["Tractability"].str.replace(r'<.*?>', '', regex=True)
            merged = pd.merge(merged, ot_clean.drop(columns=["Biotype_raw"]), how="left", left_on="Gene Name", right_on="Gene Symbol")
 
-           # Merge with pathway genes (optional: only if pathway is selected)
-           if not pathway_genes.empty:
-              merged = pd.merge(merged, pathway_genes[["Gene", "abs_fc"]], on="Gene", how="left")
+           merged["abs_fc"] = merged["log_2 fold change"].abs()
 
-              # Merge with drug interactions
-              if not drug_df.empty:
-                 drug_clean = drug_df.copy()
-                 drug_summary = drug_clean.groupby("Gene").agg({
-                     "Drug": lambda x: "; ".join(sorted(set(x))),
-                     "Interaction Type": lambda x: "; ".join(sorted(set(x))),
-                     "PMID": lambda x: "; ".join(sorted(set(str(p) for p in x if p != 'N/A'))),
-                     "Interaction Score": "mean"
+            # Drug–gene interactions for all genes
+           all_drug_df = get_drug_targets_dgidb_graphql(merged["Gene Name"].unique().tolist())
+
+           if not all_drug_df.empty:
+               drug_clean = all_drug_df.copy()
+               drug_summary = drug_clean.groupby("Gene").agg({
+                   "Drug": lambda x: "; ".join(sorted(set(x))),
+                   "Interaction Type": lambda x: "; ".join(sorted(set(x))),
+                   "PMID": lambda x: "; ".join(sorted(set(str(p) for p in x if p != 'N/A'))),
+                   "Interaction Score": "mean"
+               }).reset_index()
+
+               merged = pd.merge(merged, drug_summary, how="left", left_on="Gene Name", right_on="Gene")
+
+            # Add Pathway memberships (use `top_pathways` to map genes)
+            # Only done over topN pathways to reduce computing time
+           if not top_pathways.empty:
+               gene_to_pathways = defaultdict(list)
+               for _, row in top_pathways.iterrows():
+                   pathway_name = row["Term"]
+                   genes_in_pathway = [g.strip().upper() for g in row["Genes"].split(";")]
+                   for gene in genes_in_pathway:
+                       gene_to_pathways[gene].append(pathway_name)
+
+               merged["Gene Name"] = merged["Gene Name"].astype(str).str.strip().str.upper()
+               merged["Pathways"] = merged["Gene Name"].apply(lambda g: "; ".join(gene_to_pathways.get(g, [])))
+
+               drug_summary = drug_clean.groupby("Gene").agg({
+                    "Drug": lambda x: "; ".join(sorted(set(x))),
+                    "Interaction Type": lambda x: "; ".join(sorted(set(x))),
+                    "PMID": lambda x: "; ".join(sorted(set(str(p) for p in x if p != 'N/A'))),
+                    "Interaction Score": "mean"
                      }).reset_index()
-                 merged = pd.merge(merged, drug_summary, how="left", left_on="Gene Name", right_on="Gene")
+               merged = pd.merge(merged, drug_summary, how="left", left_on="Gene Name", right_on="Gene")
+               # Drop the right-side 'Gene' from drug_summary to not be redundant
+               merged = merged.drop(columns=["Gene_y"], errors="ignore")
+
+                # Rename Gene_x column
+               if "Gene_x" in merged.columns:
+                    merged = merged.rename(columns={"Gene_x": "Gene"})
+
+                # Remove suffixes from Drug/Interaction columns when duplicated
+               for col in merged.columns:
+                    if col.endswith("_x") and col[:-2] + "_y" in merged.columns:
+                        # Keep _x version, drop _y
+                        merged = merged.drop(columns=[col[:-2] + "_y"])
+                        merged = merged.rename(columns={col: col[:-2]})
+
                         
-                 if not top_pathways.empty:
-                    pathway_genes_unique = pathway_genes[["Gene Name"]].drop_duplicates()
-                    pathway_genes_unique["Pathway Match"] = True
-                    merged = pd.merge(merged, pathway_genes, how ="left", on="Gene Name")
+               if not top_pathways.empty:
+                   pathway_genes_unique = pathway_genes[["Gene Name"]].drop_duplicates()
+                   pathway_genes_unique["Pathway Match"] = True
+                   merged = pd.merge(
+                        merged,
+                        pathway_genes[["Gene Name", "abs_fc"]],
+                        how="left",
+                        on="Gene Name"
+                    )
+
                         
                  #Delete duplicated columns
-                 merged = merged.drop(columns=["Gene_y", "Gene Symbol", "Tractability_raw", "Gene Name_raw_x", "Gene Name_raw_y", "abs_fc_y", "log_2 fold change_y"], errors="ignore")
-                 merged = merged.rename(columns={"Gene_x": "Gene", "abs_fc_x" : "abs_fc"})
-                 dupes = merged.columns[merged.columns.duplicated()].tolist()
-                 merged = merged.loc[:, ~merged.columns.duplicated(keep="first")]
+               merged = merged.drop(columns=["Gene_y", "Gene Symbol", "Tractability_raw", "Gene Name_raw_x", "Gene Name_raw_y", "abs_fc_y", "log_2 fold change_y"], errors="ignore")
+               merged = merged.rename(columns={"Gene_x": "Gene", "abs_fc_x" : "abs_fc"})
+               dupes = merged.columns[merged.columns.duplicated()].tolist()
+               merged = merged.loc[:, ~merged.columns.duplicated(keep="first")]
 
                  #Add pathways in which gene interacts
-                 gene_to_pathways = defaultdict(list)
+               gene_to_pathways = defaultdict(list)
 
-                 if not top_pathways.empty:
-                    for _, row in top_pathways.iterrows():
-                        pathway_name = row["Term"]
-                        genes_in_pathway = [g.strip().upper() for g in row["Genes"].split(";")]
-                        for gene in genes_in_pathway:
-                            gene_to_pathways[gene].append(pathway_name)
+               if not top_pathways.empty:
+                   for _, row in top_pathways.iterrows():
+                       pathway_name = row["Term"]
+                       genes_in_pathway = [g.strip().upper() for g in row["Genes"].split(";")]
+                       for gene in genes_in_pathway:
+                           gene_to_pathways[gene].append(pathway_name)
 
-                 merged["Gene Name"] = merged["Gene Name"].astype(str).str.strip().str.upper()
-                 merged["Pathways"] = merged["Gene Name"].apply(lambda g: "; ".join(gene_to_pathways.get(g, [])))
+               merged["Gene Name"] = merged["Gene Name"].astype(str).str.strip().str.upper()
+               merged["Pathways"] = merged["Gene Name"].apply(lambda g: "; ".join(gene_to_pathways.get(g, [])))
 
 
-                 # Show and offer download
-                 st.markdown("## 📦 Download Full Results Table")
-                 st.dataframe(merged, use_container_width=True)
+                 # Show and download button
+               st.markdown("## 📦 Download Full Results Table")
+               st.dataframe(merged, use_container_width=True)
 
-                 st.download_button(
+               st.download_button(
                     "📥 Download Full Combined CSV",
                     merged.to_csv(index=False),
                     "full_results_table.csv",
                     "text/csv"
-                 )
+               )
