@@ -544,10 +544,7 @@ if mesh_id:
 
         # Mostrar la tabla estilizada en Streamlit
         components.html(html_code, height=700, scrolling=True)
-
-        # Reducir espacio después del iframe
-        st.markdown(""" ...CSS... """, unsafe_allow_html=True)
-
+        
         # Botón inmediatamente después
         st.download_button(
             "📥 Download Genes CSV",
