@@ -450,31 +450,79 @@ if mesh_id:
         <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
         <style>
-        /* Fuerza fondo blanco y texto negro */
+        /* Aplica fuente y estilo a toda la tabla y sus elementos */
+        .dataTables_wrapper, .dataTables_wrapper * {{
+            font-family: "Segoe UI", "Helvetica", "Arial", sans-serif !important;
+            color: #31333f !important;
+            font-size: 15px !important;
+        }}
+
+        /* Tabla */
         #geneTable, #geneTable thead, #geneTable tbody, #geneTable tr, #geneTable td, #geneTable th {{
             background-color: white !important;
-            color: black !important;
+            color: #31333f !important;
             border-color: #ccc !important;
         }}
 
+        /* Encabezados */
+        #geneTable thead th {{
+            font-weight: 600 !important;
+        }}
+
+        /* Inputs de búsqueda */
         #geneTable input {{
             background-color: white !important;
-            color: black !important;
+            color: #31333f !important;
+            font-size: 14px !important;
             border: 1px solid #ccc !important;
         }}
 
-        .dataTables_wrapper {{
-            color: black !important;
+        /* Selector de número de entradas */
+        .dataTables_length select {{
+            background-color: white !important;
+            color: #31333f !important;
+            border: 1px solid #ccc !important;
+            font-size: 14px !important;
         }}
 
-        div.dataTables_wrapper div.dataTables_paginate, 
-        div.dataTables_wrapper div.dataTables_info {{
-            color: black !important;
+        /* Info de resultados */
+        .dataTables_info {{
+            color: #31333f !important;
+        }}
+
+        /* Paginación */
+        .dataTables_paginate a {{
+            color: #31333f !important;
+            font-size: 14px !important;
+            font-weight: normal !important;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            margin: 0 2px;
+        }}
+
+        .dataTables_paginate a.current {{
+            background-color: #f0f0f0 !important;
+            font-weight: bold !important;
+            border: 1px solid #aaa !important;
+        }}
+
+        .dataTables_paginate a:hover {{
+            background-color: #e3e3e3 !important;
         }}
         </style>
 
         <script>
         $(document).ready(function() {{
+            var table = $('#geneTable').DataTable({{
+                scrollY: '400px',
+                scrollCollapse: true,
+                paging: true,
+                orderCellsTop: true,
+                fixedHeader: true
+            }});
+
+            // Añadir inputs de búsqueda en cada columna
             $('#geneTable thead tr').clone(true).appendTo('#geneTable thead');
             $('#geneTable thead tr:eq(1) th').each(function(i) {{
                 var title = $(this).text();
@@ -486,30 +534,26 @@ if mesh_id:
                     }}
                 }});
             }});
-
-            var table = $('#geneTable').DataTable({{
-                scrollY: '400px',
-                scrollCollapse: true,
-                paging: true,
-                orderCellsTop: true,
-                fixedHeader: true,
-                searching: false
-            }});
         }});
         </script>
 
-        <div style="overflow-x:auto">
+        <div style="overflow-x:auto; margin-bottom: 0px;"">
         {html_table}
         </div>
         """
-        # Display table
-        components.html(html_code, height=650, scrolling=True)
+
+        # Mostrar la tabla estilizada en Streamlit
+        components.html(html_code, height=700, scrolling=True)
+
+        # Reducir espacio después del iframe
+        st.markdown(""" ...CSS... """, unsafe_allow_html=True)
+
+        # Botón inmediatamente después
         st.download_button(
             "📥 Download Genes CSV",
             df_selected_with_links.to_csv(index=False),
             "genes.csv",
-            "text/csv"
-        )
+            "text/csv")
         
         df_selected["Gene Name_raw"] = df_selected["Gene Name"]
 
@@ -635,14 +679,105 @@ if mesh_id:
 
 
                     if top_pathways is not None:
-                        html_pathway_table = top_pathways[["Reactome Link", "Adjusted P-value", "-log10(Adj P)", "Overlap", "Input %", "Sum log2fc"]].to_html(escape=False, index=False)
+                        html_pathway_table = top_pathways[["Reactome Link", "Adjusted P-value", "-log10(Adj P)", "Overlap", "Input %", "Sum log2fc"]].to_html(escape=False, index=False, table_id="topPathwayTable")
+                        
+                        html_code_top_pathways = f"""
+                        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+                        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-                        html_pathway_scroll = f"""
-                            <div style="max-height: 500px; overflow-y: auto;">
+                        <style>
+                            body, .dataTables_wrapper, .dataTables_wrapper * {{
+                                font-family: "Segoe UI", "Helvetica", "Arial", sans-serif !important;
+                                color: #31333f !important;
+                                font-size: 15px !important;
+                            }}
+
+                            #topPathwayTable {{
+                                width: 100% !important;
+                            }}
+
+                            #topPathwayTable, #topPathwayTable thead, #topPathwayTable tbody, #topPathwayTable tr, #topPathwayTable td, #topPathwayTable th {{
+                                background-color: white !important;
+                                color: #31333f !important;
+                                border-color: #ccc !important;
+                            }}
+
+                            #topPathwayTable thead th {{
+                                font-weight: 600 !important;
+                            }}
+
+                            #topPathwayTable input {{
+                                width: 100%;
+                                box-sizing: border-box;
+                                background-color: white !important;
+                                color: #31333f !important;
+                                font-size: 14px !important;
+                                border: 1px solid #ccc !important;
+                            }}
+
+                            .dataTables_length select {{
+                                background-color: white !important;
+                                color: #31333f !important;
+                                border: 1px solid #ccc !important;
+                                font-size: 14px !important;
+                            }}
+
+                            .dataTables_info {{
+                                color: #31333f !important;
+                            }}
+
+                            .dataTables_paginate a {{
+                                color: #31333f !important;
+                                font-size: 14px !important;
+                                font-weight: normal !important;
+                                padding: 6px 12px;
+                                border-radius: 6px;
+                                text-decoration: none;
+                                margin: 0 2px;
+                            }}
+
+                            .dataTables_paginate a.current {{
+                                background-color: #f0f0f0 !important;
+                                font-weight: bold !important;
+                                border: 1px solid #aaa !important;
+                            }}
+
+                            .dataTables_paginate a:hover {{
+                                background-color: #e3e3e3 !important;
+                            }}
+                        </style>
+
+                        <script>
+                            $(document).ready(function() {{
+                                var table = $('#topPathwayTable').DataTable({{
+                                    scrollY: '400px',
+                                    scrollCollapse: true,
+                                    paging: true,
+                                    orderCellsTop: true,
+                                    fixedHeader: false,
+                                    autoWidth: false
+                                }});
+
+                                $('#topPathwayTable thead tr').clone(true).appendTo('#topPathwayTable thead');
+                                $('#topPathwayTable thead tr:eq(1) th').each(function(i) {{
+                                    var title = $(this).text();
+                                    $(this).html('<input type="text" placeholder="Search ' + title + '" />');
+                                }});
+
+                                $('#topPathwayTable thead').on('keyup change', 'input', function () {{
+                                    let i = $(this).parent().index();
+                                    table.column(i).search(this.value).draw();
+                                }});
+                            }});
+                        </script>
+
+                        <div style="overflow-x:auto">
                             {html_pathway_table}
-                            </div>
+                        </div>
                         """
-                        st.markdown(html_pathway_scroll, unsafe_allow_html=True)
+
+                        components.html(html_code_top_pathways, height=700, scrolling=True)
                                     
                         st.markdown("# Important genes in pathway: ")
                         selected_pathway = st.selectbox(
@@ -666,15 +801,106 @@ if mesh_id:
                         )
 
                         # Render HTML table with scroll
-                        html_genespathway_table = pathway_genes.to_html(escape=False, index=False)
+                        html_genespathway_table = pathway_genes.to_html(escape=False, index=False, table_id="pathwayGeneTable")
 
-                        html_genespathway_scroll = f"""
-                            <div style="max-height: 500px; overflow-y: auto;">
+                        # Código HTML con estilos y DataTables JS
+                        html_code_pathway = f"""
+                        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+                        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+                        <style>
+                            .dataTables_wrapper, .dataTables_wrapper * {{
+                                font-family: "Segoe UI", "Helvetica", "Arial", sans-serif !important;
+                                color: #31333f !important;
+                                font-size: 15px !important;
+                            }}
+
+                            #pathwayGeneTable {{
+                                width: 100% !important;
+                            }}
+
+                            #pathwayGeneTable, #pathwayGeneTable thead, #pathwayGeneTable tbody, #pathwayGeneTable tr, #pathwayGeneTable td, #pathwayGeneTable th {{
+                                background-color: white !important;
+                                color: #31333f !important;
+                                border-color: #ccc !important;
+                            }}
+
+                            #pathwayGeneTable thead th {{
+                                font-weight: 600 !important;
+                            }}
+
+                            #pathwayGeneTable input {{
+                                width: 100%;
+                                box-sizing: border-box;
+                                background-color: white !important;
+                                color: #31333f !important;
+                                font-size: 14px !important;
+                                border: 1px solid #ccc !important;
+                            }}
+
+                            .dataTables_length select {{
+                                background-color: white !important;
+                                color: #31333f !important;
+                                border: 1px solid #ccc !important;
+                                font-size: 14px !important;
+                            }}
+
+                            .dataTables_info {{
+                                color: #31333f !important;
+                            }}
+
+                            .dataTables_paginate a {{
+                                color: #31333f !important;
+                                font-size: 14px !important;
+                                font-weight: normal !important;
+                                padding: 6px 12px;
+                                border-radius: 6px;
+                                text-decoration: none;
+                                margin: 0 2px;
+                            }}
+
+                            .dataTables_paginate a.current {{
+                                background-color: #f0f0f0 !important;
+                                font-weight: bold !important;
+                                border: 1px solid #aaa !important;
+                            }}
+
+                            .dataTables_paginate a:hover {{
+                                background-color: #e3e3e3 !important;
+                            }}
+                        </style>
+
+                        <script>
+                            $(document).ready(function() {{
+                                var table = $('#pathwayGeneTable').DataTable({{
+                                    scrollY: '400px',
+                                    scrollCollapse: true,
+                                    paging: true,
+                                    orderCellsTop: true,
+                                    fixedHeader: false,
+                                    autoWidth: false
+                                }});
+
+                                $('#pathwayGeneTable thead tr').clone(true).appendTo('#pathwayGeneTable thead');
+                                $('#pathwayGeneTable thead tr:eq(1) th').each(function(i) {{
+                                    var title = $(this).text();
+                                    $(this).html('<input type="text" placeholder="Search ' + title + '" />');
+                                }});
+
+                                $('#pathwayGeneTable thead').on('keyup change', 'input', function () {{
+                                    let i = $(this).parent().index();
+                                    table.column(i).search(this.value).draw();
+                                }});
+                            }});
+                        </script>
+
+                        <div style="overflow-x:auto">
                             {html_genespathway_table}
-                            </div>
+                        </div>
                         """
 
-                        st.markdown(html_genespathway_scroll, unsafe_allow_html=True)
+                        components.html(html_code_pathway, height=700, scrolling=True)
                         st.download_button("📥 Download Important Genes CSV", pathway_genes.to_csv(index=False), "genes_pathway.csv", "text/csv")
                 except ValueError:
                     st.error("Please enter a valid integer.")
@@ -700,14 +926,106 @@ if mesh_id:
                     #st.write(drug_df_with_links.to_html(escape=False, index=False), unsafe_allow_html=True)
                     
                     # HTML table
-                    html_drug_table = drug_df_with_links.to_html(escape=False, index=False)
+                    html_drug_table = drug_df_with_links.to_html(escape=False, index=False, table_id="drugTable")
 
-                    html_drug_scroll = f"""
-                    <div style="max-height: 500px; overflow-y: auto;">
+                    html_code_drug = f"""
+                    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+                    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+                    <style>
+                        .dataTables_wrapper, .dataTables_wrapper * {{
+                            font-family: "Segoe UI", "Helvetica", "Arial", sans-serif !important;
+                            color: #31333f !important;
+                            font-size: 15px !important;
+                        }}
+
+                        #drugTable {{
+                            width: 100% !important;
+                        }}
+
+                        #drugTable, #drugTable thead, #drugTable tbody, #drugTable tr, #drugTable td, #drugTable th {{
+                            background-color: white !important;
+                            color: #31333f !important;
+                            border-color: #ccc !important;
+                        }}
+
+                        #drugTable thead th {{
+                            font-weight: 600 !important;
+                        }}
+
+                        #drugTable input {{
+                            width: 100%;
+                            box-sizing: border-box;
+                            background-color: white !important;
+                            color: #31333f !important;
+                            font-size: 14px !important;
+                            border: 1px solid #ccc !important;
+                        }}
+
+                        .dataTables_length select {{
+                            background-color: white !important;
+                            color: #31333f !important;
+                            border: 1px solid #ccc !important;
+                            font-size: 14px !important;
+                        }}
+
+                        .dataTables_info {{
+                            color: #31333f !important;
+                        }}
+
+                        .dataTables_paginate a {{
+                            color: #31333f !important;
+                            font-size: 14px !important;
+                            font-weight: normal !important;
+                            padding: 6px 12px;
+                            border-radius: 6px;
+                            text-decoration: none;
+                            margin: 0 2px;
+                        }}
+
+                        .dataTables_paginate a.current {{
+                            background-color: #f0f0f0 !important;
+                            font-weight: bold !important;
+                            border: 1px solid #aaa !important;
+                        }}
+
+                        .dataTables_paginate a:hover {{
+                            background-color: #e3e3e3 !important;
+                        }}
+                    </style>
+
+                    <script>
+                        $(document).ready(function() {{
+                            var table = $('#drugTable').DataTable({{
+                                scrollY: '400px',
+                                scrollCollapse: true,
+                                paging: true,
+                                orderCellsTop: true,
+                                fixedHeader: false,
+                                autoWidth: false
+                            }});
+
+                            $('#drugTable thead tr').clone(true).appendTo('#drugTable thead');
+                            $('#drugTable thead tr:eq(1) th').each(function(i) {{
+                                var title = $(this).text();
+                                $(this).html('<input type="text" placeholder="Search ' + title + '" />');
+                            }});
+
+                            $('#drugTable thead').on('keyup change', 'input', function () {{
+                                let i = $(this).parent().index();
+                                table.column(i).search(this.value).draw();
+                            }});
+                        }});
+                    </script>
+
+                    <div style="overflow-x:auto">
                         {html_drug_table}
                     </div>
-                        """
-                    st.markdown(html_drug_scroll, unsafe_allow_html=True)
+                    """
+
+                    components.html(html_code_drug, height=700, scrolling=True)
+
         
                     st.download_button("📥 Download Drug Interactions CSV", drug_df.to_csv(index=False), "drug_interactions.csv", "text/csv")
                     
