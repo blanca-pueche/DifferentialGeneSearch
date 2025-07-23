@@ -327,7 +327,7 @@ def drug_with_links(df):
     
     
 # Estimate table height based on number of rows --> dynamic change for better presentation
-def estimate_table_height(df, max_visible_rows=10, base_row_height=50, tall_row_height=100, overhead=100, min_height=350, max_height=750): 
+def estimate_table_height(df, max_visible_rows=10, base_row_height=50, tall_row_height=70, overhead=70, min_height=350, max_height=1200): 
     visible_rows = min(len(df), max_visible_rows) 
     
     if df.shape[1] >= 2: 
@@ -335,12 +335,13 @@ def estimate_table_height(df, max_visible_rows=10, base_row_height=50, tall_row_
     else: 
         lengths = df.iloc[:visible_rows].astype(str).map(len) 
     
-    tall_rows = (lengths > 100).any(axis=1).sum() 
+    tall_rows = (lengths > 60).any(axis=1).sum() 
     normal_rows = visible_rows - tall_rows 
     row_height = (normal_rows * base_row_height) + (tall_rows * tall_row_height) 
     
     estimated_height = row_height + overhead 
     # Clamp height between min and max 
+    print(estimated_height, max(min(estimated_height, max_height), min_height))
     return max(min(estimated_height, max_height), min_height)
 
 
@@ -622,16 +623,108 @@ if mesh_id:
                 st.markdown("# Genes with Tractability (Open Targets)")
 
                 #scroll
-                html_ot_table = openTargets_df.to_html(escape=False, index=False)
+                html_ot_table = openTargets_df.to_html(escape=False, index=False, table_id="openTargetsTable")
 
                 html_ot_scroll = f"""
-                    <div style="max-height: 500px; overflow-y: auto; margin-bottom: 10px;">
+                    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+                    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+                    <style>
+                    /* Apply style to whole table */
+                    .dataTables_wrapper, .dataTables_wrapper * {{
+                        font-family: "Segoe UI", "Helvetica", "Arial", sans-serif !important;
+                        color: #31333f !important;
+                        font-size: 15px !important;
+                    }}
+
+                    /* Table */
+                    #openTargetsTable, #openTargetsTable thead, #openTargetsTable tbody, #openTargetsTable tr, #openTargetsTable td, #openTargetsTable th {{
+                        background-color: white !important;
+                        color: #31333f !important;
+                        border-color: #ccc !important;
+                    }}
+
+                    /* Headers */
+                    #openTargetsTable thead th {{
+                        font-weight: 600 !important;
+                    }}
+
+                    /* Search inputs */
+                    #openTargetsTable input {{
+                        background-color: white !important;
+                        color: #31333f !important;
+                        font-size: 14px !important;
+                        border: 1px solid #ccc !important;
+                    }}
+
+                    /* Entry selections */
+                    .dataTables_length select {{
+                        background-color: white !important;
+                        color: #31333f !important;
+                        border: 1px solid #ccc !important;
+                        font-size: 14px !important;
+                    }}
+
+                    /* Results info */
+                    .dataTables_info {{
+                        color: #31333f !important;
+                    }}
+
+                    /* Pages */
+                    .dataTables_paginate a {{
+                        color: #31333f !important;
+                        font-size: 14px !important;
+                        font-weight: normal !important;
+                        padding: 6px 12px;
+                        border-radius: 6px;
+                        text-decoration: none;
+                        margin: 0 2px;
+                    }}
+
+                    .dataTables_paginate a.current {{
+                        background-color: #f0f0f0 !important;
+                        font-weight: bold !important;
+                        border: 1px solid #aaa !important;
+                    }}
+
+                    .dataTables_paginate a:hover {{
+                        background-color: #e3e3e3 !important;
+                    }}
+                    </style>
+
+                    <script>
+                    $(document).ready(function() {{
+                        var table = $('#openTargetsTable').DataTable({{
+                            scrollCollapse: true,
+                            paging: true,
+                            orderCellsTop: true,
+                            fixedHeader: true
+                        }});
+
+                        // Add search inputs to each column
+                        $('#openTargetsTable thead tr').clone(true).appendTo('#openTargetsTable thead');
+                        $('#openTargetsTable thead tr:eq(1) th').each(function(i) {{
+                            var title = $(this).text();
+                            $(this).html('<input type="text" placeholder="Search ' + title + '" />');
+
+                            $('input', this).on('keyup change', function () {{
+                                if (table.column(i).search() !== this.value) {{
+                                    table.column(i).search(this.value).draw();
+                                }}
+                            }});
+                        }});
+                    }});
+                    </script>
+                    
+                    <div style="overflow-x:auto">
                         {html_ot_table}
                     </div>
                 """
 
-                st.markdown(html_ot_scroll, unsafe_allow_html=True)
-                st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
+                #st.markdown(html_ot_scroll, unsafe_allow_html=True)
+                height = estimate_table_height(openTargets_df)
+                components.html(html_ot_scroll, height=900, scrolling=True)
                 
                 st.download_button(
                     "📥 Download results from Open Targets",
@@ -1224,7 +1317,106 @@ if mesh_id:
 
                  # Show and download button
                st.markdown("## 📦 Download Full Results Table")
-               st.dataframe(merged, use_container_width=True)
+               #st.dataframe(merged, use_container_width=True)
+               
+               html_final_table = merged.to_html(escape=False, index=False, table_id="finalTable")
+
+               html_code_final = f"""
+                <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+                <style>
+                    .dataTables_wrapper, .dataTables_wrapper * {{
+                        font-family: "Segoe UI", "Helvetica", "Arial", sans-serif !important;
+                        color: #31333f !important;
+                        font-size: 10px !important;
+                    }}
+
+                    #finalTable {{
+                        width: 100% !important;
+                    }}
+
+                    #finalTable, #finalTable thead, #finalTable tbody, #finalTable tr, #finalTable td, #finalTable th {{
+                        background-color: white !important;
+                        color: #31333f !important;
+                        border-color: #ccc !important;
+                    }}
+
+                    #finalTable thead th {{
+                        font-weight: 600 !important;
+                    }}
+
+                    #finalTable input {{
+                        width: 100%;
+                        box-sizing: border-box;
+                        background-color: white !important;
+                        color: #31333f !important;
+                        font-size: 14px !important;
+                        border: 1px solid #ccc !important;
+                    }}
+
+                    .dataTables_length select {{
+                        background-color: white !important;
+                        color: #31333f !important;
+                        border: 1px solid #ccc !important;
+                        font-size: 14px !important;
+                    }}
+
+                    .dataTables_info {{
+                        color: #31333f !important;
+                    }}
+
+                    .dataTables_paginate a {{
+                        color: #31333f !important;
+                        font-size: 14px !important;
+                        font-weight: normal !important;
+                        padding: 6px 12px;
+                        border-radius: 6px;
+                        text-decoration: none;
+                        margin: 0 2px;
+                    }}
+
+                    .dataTables_paginate a.current {{
+                        background-color: #f0f0f0 !important;
+                        font-weight: bold !important;
+                        border: 1px solid #aaa !important;
+                    }}
+
+                    .dataTables_paginate a:hover {{
+                        background-color: #e3e3e3 !important;
+                    }}
+                </style>
+
+                <script>
+                    $(document).ready(function() {{
+                        var table = $('#finalTable').DataTable({{
+                            scrollCollapse: true,
+                            paging: true,
+                            orderCellsTop: true,
+                            fixedHeader: false,
+                            autoWidth: false
+                        }});
+
+                        $('#finalTable thead tr').clone(true).appendTo('#finalTable thead');
+                        $('#finalTable thead tr:eq(1) th').each(function(i) {{
+                            var title = $(this).text();
+                            $(this).html('<input type="text" placeholder="Search ' + title + '" />');
+                        }});
+
+                        $('#finalTable thead').on('keyup change', 'input', function () {{
+                            let i = $(this).parent().index();
+                            table.column(i).search(this.value).draw();
+                        }});
+                    }});
+                </script>
+
+                <div style="overflow-x:auto">
+                    {html_final_table}
+                </div>
+                """
+               height = estimate_table_height(merged)
+               components.html(html_code_final, height=height, scrolling=True)
 
                st.download_button(
                     "📥 Download Full Combined CSV",
