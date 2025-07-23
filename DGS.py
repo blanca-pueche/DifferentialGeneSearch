@@ -326,6 +326,24 @@ def drug_with_links(df):
     return df_with_links
     
     
+# Estimate table height based on number of rows --> dynamic change for better presentation
+def estimate_table_height(df, max_visible_rows=10, base_row_height=50, tall_row_height=100, overhead=100, min_height=350, max_height=750): 
+    visible_rows = min(len(df), max_visible_rows) 
+    
+    if df.shape[1] >= 2: 
+        lengths = df.iloc[:visible_rows, :2].astype(str).map(len) 
+    else: 
+        lengths = df.iloc[:visible_rows].astype(str).map(len) 
+    
+    tall_rows = (lengths > 100).any(axis=1).sum() 
+    normal_rows = visible_rows - tall_rows 
+    row_height = (normal_rows * base_row_height) + (tall_rows * tall_row_height) 
+    
+    estimated_height = row_height + overhead 
+    # Clamp height between min and max 
+    return max(min(estimated_height, max_height), min_height)
+
+
 
 st.title("Disease-Gene-Drug Analysis Dashboard")
 
@@ -397,7 +415,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 #Step 1: Text input (no visible label but accessibility provided)
-email = st.text_input("Correo electrónico", key="user_email", label_visibility="collapsed")
+email = st.text_input("User e-mail:", key="user_email", label_visibility="collapsed")
 
 
 #Step 2: Name from MeshID
@@ -450,26 +468,26 @@ if mesh_id:
         <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
         <style>
-        /* Aplica fuente y estilo a toda la tabla y sus elementos */
+        /* Apply style to whole table */
         .dataTables_wrapper, .dataTables_wrapper * {{
             font-family: "Segoe UI", "Helvetica", "Arial", sans-serif !important;
             color: #31333f !important;
             font-size: 15px !important;
         }}
 
-        /* Tabla */
+        /* Table */
         #geneTable, #geneTable thead, #geneTable tbody, #geneTable tr, #geneTable td, #geneTable th {{
             background-color: white !important;
             color: #31333f !important;
             border-color: #ccc !important;
         }}
 
-        /* Encabezados */
+        /* Headers */
         #geneTable thead th {{
             font-weight: 600 !important;
         }}
 
-        /* Inputs de búsqueda */
+        /* Search inputs */
         #geneTable input {{
             background-color: white !important;
             color: #31333f !important;
@@ -477,7 +495,7 @@ if mesh_id:
             border: 1px solid #ccc !important;
         }}
 
-        /* Selector de número de entradas */
+        /* Entry selections */
         .dataTables_length select {{
             background-color: white !important;
             color: #31333f !important;
@@ -485,12 +503,12 @@ if mesh_id:
             font-size: 14px !important;
         }}
 
-        /* Info de resultados */
+        /* Results info */
         .dataTables_info {{
             color: #31333f !important;
         }}
 
-        /* Paginación */
+        /* Pages */
         .dataTables_paginate a {{
             color: #31333f !important;
             font-size: 14px !important;
@@ -515,14 +533,13 @@ if mesh_id:
         <script>
         $(document).ready(function() {{
             var table = $('#geneTable').DataTable({{
-                scrollY: '400px',
                 scrollCollapse: true,
                 paging: true,
                 orderCellsTop: true,
                 fixedHeader: true
             }});
 
-            // Añadir inputs de búsqueda en cada columna
+            // Add search inputs to each column
             $('#geneTable thead tr').clone(true).appendTo('#geneTable thead');
             $('#geneTable thead tr:eq(1) th').each(function(i) {{
                 var title = $(this).text();
@@ -542,10 +559,14 @@ if mesh_id:
         </div>
         """
 
-        # Mostrar la tabla estilizada en Streamlit
-        components.html(html_code, height=700, scrolling=True)
+        height = estimate_table_height(df_selected)
         
-        # Botón inmediatamente después
+        
+        # Show table
+        components.html(html_code, height=height, scrolling=True)
+        #st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+        
+        # Download button
         st.download_button(
             "📥 Download Genes CSV",
             df_selected_with_links.to_csv(index=False),
@@ -604,12 +625,13 @@ if mesh_id:
                 html_ot_table = openTargets_df.to_html(escape=False, index=False)
 
                 html_ot_scroll = f"""
-                    <div style="max-height: 500px; overflow-y: auto;"">
+                    <div style="max-height: 500px; overflow-y: auto; margin-bottom: 10px;">
                         {html_ot_table}
                     </div>
                 """
 
                 st.markdown(html_ot_scroll, unsafe_allow_html=True)
+                st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
                 
                 st.download_button(
                     "📥 Download results from Open Targets",
@@ -748,7 +770,6 @@ if mesh_id:
                         <script>
                             $(document).ready(function() {{
                                 var table = $('#topPathwayTable').DataTable({{
-                                    scrollY: '400px',
                                     scrollCollapse: true,
                                     paging: true,
                                     orderCellsTop: true,
@@ -773,8 +794,15 @@ if mesh_id:
                             {html_pathway_table}
                         </div>
                         """
-
-                        components.html(html_code_top_pathways, height=700, scrolling=True)
+                        height = estimate_table_height(top_pathways)
+                        components.html(html_code_top_pathways, height=height, scrolling=True)
+                        #st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+                        
+                        st.download_button(
+                            "📥 Download TopN pathways CSV",
+                            top_pathways.to_csv(index=False),
+                            "topPathways.csv",
+                            "text/csv")
                                     
                         st.markdown("# Important genes in pathway: ")
                         selected_pathway = st.selectbox(
@@ -800,7 +828,7 @@ if mesh_id:
                         # Render HTML table with scroll
                         html_genespathway_table = pathway_genes.to_html(escape=False, index=False, table_id="pathwayGeneTable")
 
-                        # Código HTML con estilos y DataTables JS
+                        # HTML and DataTables JS
                         html_code_pathway = f"""
                         <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
                         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -871,7 +899,6 @@ if mesh_id:
                         <script>
                             $(document).ready(function() {{
                                 var table = $('#pathwayGeneTable').DataTable({{
-                                    scrollY: '400px',
                                     scrollCollapse: true,
                                     paging: true,
                                     orderCellsTop: true,
@@ -897,8 +924,17 @@ if mesh_id:
                         </div>
                         """
 
-                        components.html(html_code_pathway, height=700, scrolling=True)
-                        st.download_button("📥 Download Important Genes CSV", pathway_genes.to_csv(index=False), "genes_pathway.csv", "text/csv")
+                        height = estimate_table_height(pathway_genes)
+                        components.html(html_code_pathway, height=height, scrolling=True)
+                        #st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+
+                        st.download_button(
+                            "📥 Download Important Genes CSV",
+                            pathway_genes.to_csv(index=False),
+                            "genes_pathway.csv",
+                            "text/csv"
+                        )
+
                 except ValueError:
                     st.error("Please enter a valid integer.")
                 
@@ -913,7 +949,6 @@ if mesh_id:
                     selected_pathway_row = top_pathways[top_pathways["Term"] == selected_pathway].iloc[0]
 
                     pathway_genes = get_overlapping_genes(df_selected, selected_pathway_row)
-                    print(pathway_genes["Gene Name"].to_list())
                     drug_df = get_drug_targets_dgidb_graphql(pathway_genes["Gene Name"].tolist())
 
                 if not drug_df.empty:
@@ -995,7 +1030,6 @@ if mesh_id:
                     <script>
                         $(document).ready(function() {{
                             var table = $('#drugTable').DataTable({{
-                                scrollY: '400px',
                                 scrollCollapse: true,
                                 paging: true,
                                 orderCellsTop: true,
@@ -1020,9 +1054,9 @@ if mesh_id:
                         {html_drug_table}
                     </div>
                     """
-
-                    components.html(html_code_drug, height=700, scrolling=True)
-
+                    height = estimate_table_height(drug_df)
+                    components.html(html_code_drug, height=height, scrolling=True)
+                    #st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
         
                     st.download_button("📥 Download Drug Interactions CSV", drug_df.to_csv(index=False), "drug_interactions.csv", "text/csv")
                     
@@ -1065,8 +1099,9 @@ if mesh_id:
                         # Group by type of interaction
                         interaction_grouped = (
                             drug_df.groupby('Interaction Type', group_keys=False)
-                            .apply(lambda df: [f"{g} → {d}" for g, d in zip(df['Gene'], df['Drug'])])
+                            .apply(lambda df: [f"{g} → {d}" for g, d in zip(df['Gene'], df['Drug'])], include_groups=False)
                         )
+
                         
 
                         # Convert to DataFrame with columns according to interaction type
