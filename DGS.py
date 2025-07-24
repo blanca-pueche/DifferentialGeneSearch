@@ -724,7 +724,7 @@ if mesh_id:
 
                 #st.markdown(html_ot_scroll, unsafe_allow_html=True)
                 height = estimate_table_height(openTargets_df)
-                components.html(html_ot_scroll, height=900, scrolling=True)
+                components.html(html_ot_scroll, height=height+200, scrolling=True)
                 
                 st.download_button(
                     "📥 Download results from Open Targets",
@@ -917,6 +917,8 @@ if mesh_id:
                         pathway_genes["Gene Name"] = pathway_genes["Gene Name"].apply(
                             lambda gene_id: f'<a href="https://www.ensembl.org/Multi/Search/Results?q={gene_id}" target="_blank">{gene_id}</a>'
                         )
+                        
+                        pathway_genes = pathway_genes.drop(columns=["Gene Name_raw", "abs_fc"])
 
                         # Render HTML table with scroll
                         html_genespathway_table = pathway_genes.to_html(escape=False, index=False, table_id="pathwayGeneTable")
@@ -1159,6 +1161,7 @@ if mesh_id:
 
                     # Filter by selected gene
                     gene_df = drug_df_with_links[drug_df['Gene'] == selected_gene]
+                    gene_df = gene_df.sort_values(by="Interaction Score", ascending=False)
 
                     # Plot
                     fig = px.bar(
@@ -1313,6 +1316,7 @@ if mesh_id:
 
                merged["Gene Name"] = merged["Gene Name"].astype(str).str.strip().str.upper()
                merged["Pathways"] = merged["Gene Name"].apply(lambda g: "; ".join(gene_to_pathways.get(g, [])))
+               merged = merged.drop(columns=["Gene Name_raw", "abs_fc", "Ensembl ID"])
 
 
                  # Show and download button
