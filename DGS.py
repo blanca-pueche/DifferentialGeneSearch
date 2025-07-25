@@ -341,8 +341,16 @@ def estimate_table_height(df, max_visible_rows=10, base_row_height=50, tall_row_
     
     estimated_height = row_height + overhead 
     # Clamp height between min and max 
-    print(estimated_height, max(min(estimated_height, max_height), min_height))
     return max(min(estimated_height, max_height), min_height)
+
+def normalize_disease_name(name: str) -> str:
+    # If there's a comma, move the part after the comma to the front
+    if "," in name:
+        parts = [part.strip() for part in name.split(",")]
+        # e.g., ["Muscular Dystrophy", "Duchenne"] → "Duchenne Muscular Dystrophy"
+        return f"{parts[1]} {parts[0]}"
+    return name
+
 
 
 
@@ -429,14 +437,16 @@ if mesh_id:
         disease = get_disease_name(mesh_id)
         
         if disease:
-            st.success(f"🎯 Disease **{disease}** identified")
+            normalized_disease = normalize_disease_name(disease)
+            st.success(f"🎯 Disease **{normalized_disease}** identified")
             
             # Step 3: File upload only after disease name is given
-            url = generate_expression_atlas_link(disease_name=disease)
+            url = generate_expression_atlas_link(disease_name=normalized_disease)
             uploaded_file = st.file_uploader(
                 f"📁 Upload Differential Expression File (TSV from Expression Atlas: [link]({url}))",
                 type=["tsv"]
             )
+
             
             
             
@@ -453,6 +463,11 @@ if mesh_id:
             lambda gene_id: f'<a href="https://www.ensembl.org/Multi/Search/Results?q={gene_id}" target="_blank">{gene_id}</a>'
         )
         df_selected_with_links = df_selected_with_links.sort_values(by="log_2 fold change", ascending=False)
+        #Rename columns to keep consistency
+        df_selected_with_links_newNames = df_selected_with_links.rename(columns={
+            "Gene":"Ensembl ID",
+            "Gene Name":"Gene"
+        })
         
         import streamlit.components.v1 as components
 
@@ -460,7 +475,7 @@ if mesh_id:
         st.markdown("## Gene Table with Links to Ensembl")
 
         # Conversion of dataframe to HTML
-        html_table = df_selected_with_links.to_html(escape=False, index=False, table_id="geneTable")
+        html_table = df_selected_with_links_newNames.to_html(escape=False, index=False, table_id="geneTable")
 
         # HTML code with CSS fixed in black and white
         html_code = f"""
@@ -618,12 +633,19 @@ if mesh_id:
                 openTargets_df["Gene Symbol"] = openTargets_df["Gene Symbol"].apply(
                     lambda x: f'<span title="{x}">{x[:10]}...</span>' if len(x) > 10 else x
                 )
+                
+                openTargets_df["Gene Symbol"] = openTargets_df["Gene Symbol"].apply(
+                    lambda gene_id: f'<a href="https://www.ensembl.org/Multi/Search/Results?q={gene_id}" target="_blank">{gene_id}</a>'
+                )
 
+                openTargets_df_newNames = openTargets_df.rename(columns={
+                    "Gene Symbol":"Gene"
+                })
 
                 st.markdown("# Genes with Tractability (Open Targets)")
 
                 #scroll
-                html_ot_table = openTargets_df.to_html(escape=False, index=False, table_id="openTargetsTable")
+                html_ot_table = openTargets_df_newNames.to_html(escape=False, index=False, table_id="openTargetsTable")
 
                 html_ot_scroll = f"""
                     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -919,9 +941,14 @@ if mesh_id:
                         )
                         
                         pathway_genes = pathway_genes.drop(columns=["Gene Name_raw", "abs_fc"])
+                        
+                        pathway_genes_newNames = pathway_genes.rename(columns={
+                            "Gene":"Ensembl ID",
+                            "Gene Name":"Gene"
+                        })
 
                         # Render HTML table with scroll
-                        html_genespathway_table = pathway_genes.to_html(escape=False, index=False, table_id="pathwayGeneTable")
+                        html_genespathway_table = pathway_genes_newNames.to_html(escape=False, index=False, table_id="pathwayGeneTable")
 
                         # HTML and DataTables JS
                         html_code_pathway = f"""
@@ -1317,13 +1344,22 @@ if mesh_id:
                merged["Gene Name"] = merged["Gene Name"].astype(str).str.strip().str.upper()
                merged["Pathways"] = merged["Gene Name"].apply(lambda g: "; ".join(gene_to_pathways.get(g, [])))
                merged = merged.drop(columns=["Gene Name_raw", "abs_fc", "Ensembl ID"])
+               
+               merged["Gene"] = merged["Gene"].apply(
+                    lambda gene_id: f'<a href="https://www.ensembl.org/Multi/Search/Results?q={gene_id}" target="_blank">{gene_id}</a>'
+                )
+               
+               merged_newNames = merged.rename(columns={
+                   "Gene":"Ensembl ID",
+                   "Gene Name":"Gene"
+               })
 
 
                  # Show and download button
                st.markdown("## 📦 Download Full Results Table")
                #st.dataframe(merged, use_container_width=True)
                
-               html_final_table = merged.to_html(escape=False, index=False, table_id="finalTable")
+               html_final_table = merged_newNames.to_html(escape=False, index=False, table_id="finalTable")
 
                html_code_final = f"""
                 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -1334,7 +1370,7 @@ if mesh_id:
                     .dataTables_wrapper, .dataTables_wrapper * {{
                         font-family: "Segoe UI", "Helvetica", "Arial", sans-serif !important;
                         color: #31333f !important;
-                        font-size: 10px !important;
+                        font-size: 12px !important;
                     }}
 
                     #finalTable {{
