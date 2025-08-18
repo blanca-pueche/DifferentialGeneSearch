@@ -85,7 +85,8 @@ def get_disease_name(mesh_id):
         summary_handle = Entrez.esummary(db="mesh", id=uid)
         summary_record = Entrez.read(summary_handle)
         summary_handle.close()
-        return summary_record[0]['DS_MeshTerms'][0]
+        disease_url = f"https://www.ncbi.nlm.nih.gov/mesh/{uid}"
+        return summary_record[0]['DS_MeshTerms'][0], disease_url
     except:
         return None
     
@@ -190,6 +191,7 @@ def find_possible_target_of_drugs(ensembl_id):
     
 import urllib.parse
 import gseapy as gp
+import re
 
 def analyze_pathways(df, number):
     """
@@ -205,15 +207,21 @@ def analyze_pathways(df, number):
 
     top_pathways = enr.results.copy()
 
-    # Add Reactome links
-    top_pathways["Reactome Link"] = top_pathways["Term"].apply(
-        lambda term: f'<a href="https://reactome.org/content/query?q={urllib.parse.quote(term)}" target="_blank">{term}</a>'
-    )
+    # Extract Reactome ID and create direct link
+    def make_reactome_link(term):
+        match = re.search(r'(R-HSA-\d+)', term)
+        if match:
+            rid = match.group(1)
+            return f'<a href="https://reactome.org/PathwayBrowser/#/{rid}" target="_blank">{term}</a>'
+        return term
+
+    top_pathways["Reactome Link"] = top_pathways["Term"].apply(make_reactome_link)
+
 
     # Parse overlap info
     top_pathways[["Input Genes", "Pathway Genes"]] = top_pathways["Overlap"].str.split("/", expand=True).astype(int)
     top_pathways["Input %"] = top_pathways["Input Genes"] / top_pathways["Pathway Genes"] * 100
-    top_pathways = top_pathways.sort_values("Input %", ascending=False).head(number)
+    top_pathways = top_pathways.sort_values("Adjusted P-value", ascending=True).head(number)
 
     # Sum log2fc for overlapping genes per pathway
     df["Gene Name"] = df["Gene Name"].astype(str).str.strip().str.upper()
@@ -320,8 +328,16 @@ def get_drug_targets_dgidb_graphql(gene_names):
 
 def drug_with_links(df):
     df_with_links = df.copy()
+    df_with_links["Gene"] = df_with_links["Gene"].apply(
+            lambda gene: f'<a href="https://dgidb.org/results?searchType=gene&searchTerms={urllib.parse.quote(gene)}" target="_blank">{gene}</a>'
+            if gene else ""
+    )
     df_with_links["Drug"] = df_with_links["Drug"].apply(
         lambda drug: f'<a href="https://dgidb.org/results?searchType=drug&searchTerms={urllib.parse.quote(drug)}" target="_blank">{drug}</a>'
+    )
+    df_with_links["PMID"] = df_with_links["PMID"].apply(
+        lambda pmid: f'<a href="https://pubmed.ncbi.nlm.nih.gov/{pmid}/" target="_blank">{pmid}</a>'
+        if pmid else "NaN"
     )
     return df_with_links
     
@@ -350,6 +366,55 @@ def normalize_disease_name(name: str) -> str:
         # e.g., ["Muscular Dystrophy", "Duchenne"] → "Duchenne Muscular Dystrophy"
         return f"{parts[1]} {parts[0]}"
     return name
+
+import re
+import urllib.parse
+
+def add_links_to_final_table(df):
+    df = df.copy()
+    
+    # Gene → Ensembl
+    if "Ensembl ID" in df.columns:
+        df["Ensembl ID"] = df["Ensembl ID"].apply(
+            lambda gene_id: f'<a href="https://www.ensembl.org/Multi/Search/Results?q={urllib.parse.quote(str(gene_id))}" target="_blank">{gene_id}</a>'
+        )
+    
+    # Drug → DGIdb
+    if "Drug" in df.columns:
+        def drug_links(drugs_str):
+            if pd.isna(drugs_str):
+                return ""
+            drugs = [d.strip() for d in drugs_str.split(";")]
+            return "; ".join([f'<a href="https://dgidb.org/results?searchType=drug&searchTerms={urllib.parse.quote(d)}" target="_blank">{d}</a>' for d in drugs])
+        df["Drug"] = df["Drug"].apply(drug_links)
+    
+    # PMID → PubMed
+    if "PMID" in df.columns:
+        def pmid_links(pmids_str):
+            if pd.isna(pmids_str):
+                return ""
+            pmids = [p.strip() for p in str(pmids_str).split(";")]
+            return "; ".join([f'<a href="https://pubmed.ncbi.nlm.nih.gov/{p}" target="_blank">{p}</a>' for p in pmids])
+        df["PMID"] = df["PMID"].apply(pmid_links)
+    
+    # Pathways → Reactome
+    if "Pathways" in df.columns:
+        def pathway_links(pathways_str):
+            if pd.isna(pathways_str):
+                return ""
+            pathways = [p.strip() for p in pathways_str.split(";")]
+            linked_pathways = []
+            for p in pathways:
+                match = re.search(r"(R-HSA-\d+)", p)  # Extract Reactome ID
+                if match:
+                    reactome_id = match.group(1)
+                    linked_pathways.append(f'<a href="https://reactome.org/content/detail/{reactome_id}" target="_blank">{p}</a>')
+                else:
+                    linked_pathways.append(p)
+            return "; ".join(linked_pathways)
+        df["Pathways"] = df["Pathways"].apply(pathway_links)
+    
+    return df
 
 
 
@@ -434,11 +499,11 @@ spinner = st.spinner
 
 if mesh_id:
     with st.spinner("Fetching disease information..."):
-        disease = get_disease_name(mesh_id)
+        disease, disease_url = get_disease_name(mesh_id)
         
         if disease:
             normalized_disease = normalize_disease_name(disease)
-            st.success(f"🎯 Disease **{normalized_disease}** identified")
+            st.success(f"🎯 Disease **[{normalized_disease}]({disease_url})** identified")
             
             # Step 3: File upload only after disease name is given
             url = generate_expression_atlas_link(disease_name=normalized_disease)
@@ -623,7 +688,7 @@ if mesh_id:
 
                 def format_tractability(tags):
                     if not tags:
-                        return ""
+                        return "NaN"
                     return " ".join(
                         f'<span style="background-color:#d1c4e9; color:#4a148c; padding:4px 8px; border-radius:10px; margin:2px; display:inline-block;">{tag}</span>'
                         for tag in tags
@@ -634,7 +699,7 @@ if mesh_id:
                     lambda x: f'<span title="{x}">{x[:10]}...</span>' if len(x) > 10 else x
                 )
                 
-                openTargets_df["Gene Symbol"] = openTargets_df["Gene Symbol"].apply(
+                openTargets_df["Ensembl ID"] = openTargets_df["Ensembl ID"].apply(
                     lambda gene_id: f'<a href="https://www.ensembl.org/Multi/Search/Results?q={gene_id}" target="_blank">{gene_id}</a>'
                 )
 
@@ -643,6 +708,13 @@ if mesh_id:
                 })
 
                 st.markdown("# Genes with Tractability (Open Targets)")
+                # Add a helpful link to the overview page
+                st.markdown(
+                    """
+                    ℹ️ For details on how tractability is defined, see the 
+                    [Open Targets Tractability Overview](https://platform-docs.opentargets.org/target/tractability).
+                    """
+                )
 
                 #scroll
                 html_ot_table = openTargets_df_newNames.to_html(escape=False, index=False, table_id="openTargetsTable")
@@ -804,12 +876,27 @@ if mesh_id:
             
             # Step 6: Search pathways for the genes
             st.markdown("# Top Enriched Reactome Pathways")
+            # Add a helpful link to the overview page
+            st.markdown(
+                """
+                ℹ️ For details on how the columns are defined, see the 
+                [Enrichr Help Center](https://maayanlab.cloud/Enrichr/help#background).
+                """
+            )
+            st.markdown(
+                """
+                ℹ️ **Custom column in this table**  
+                - **Input %**: Percentage of the pathway’s genes present in your input list. 
+                """
+            )
+
             number_pathways = st.text_input("🔍 Enter number of pathways to retrieve", value="10")
             if number_pathways:
                 try:
                     number_pathways = int(number_pathways)
                     top_pathways = analyze_pathways(df_selected, number_pathways)
                     top_pathways["-log10(Adj P)"] = -np.log10(top_pathways["Adjusted P-value"])
+                    top_pathways = top_pathways.sort_values("Adjusted P-value", ascending=True)
 
 
                     if top_pathways is not None:
@@ -936,7 +1023,7 @@ if mesh_id:
                         st.subheader(f"{selected_pathway}")
 
                         # Turn Gene IDs into Ensembl search links
-                        pathway_genes["Gene Name"] = pathway_genes["Gene Name"].apply(
+                        pathway_genes["Gene"] = pathway_genes["Gene"].apply(
                             lambda gene_id: f'<a href="https://www.ensembl.org/Multi/Search/Results?q={gene_id}" target="_blank">{gene_id}</a>'
                         )
                         
@@ -1183,7 +1270,7 @@ if mesh_id:
                     st.download_button("📥 Download Drug Interactions CSV", drug_df.to_csv(index=False), "drug_interactions.csv", "text/csv")
                     
                     # Gene selection and plot — BELOW the table
-                    unique_genes = drug_df_with_links['Gene'].unique()
+                    unique_genes = drug_df_with_links['Gene'].apply(lambda x: re.search(r'>(.*?)<', x).group(1)).unique()
                     selected_gene = st.selectbox("Select a gene to view its drug interaction scores", unique_genes)
 
                     # Filter by selected gene
@@ -1253,214 +1340,218 @@ if mesh_id:
             else:
                 st.warning("No enriched pathways found.")
         # -- Merge all data into a full report table --
+        with st.spinner("Creating summary table..."):
 
-        # First, clean and prepare dataframes
-        merged = df_selected.copy()
+            # First, clean and prepare dataframes
+            merged = df_selected.copy()
 
-        # Merge with Open Targets
-        if not openTargets_df.empty:
-           ot_clean = openTargets_df.copy()
-           ot_clean["Tractability"] = ot_clean["Tractability"].str.replace(r'<.*?>', '', regex=True)
-           merged = pd.merge(merged, ot_clean.drop(columns=["Biotype_raw"]), how="left", left_on="Gene Name", right_on="Gene Symbol")
+            # Merge with Open Targets
+            if not openTargets_df.empty:
+                ot_clean = openTargets_df.copy()
+                ot_clean["Tractability"] = ot_clean["Tractability"].str.replace(r'<.*?>', '', regex=True)
+                merged = pd.merge(merged, ot_clean.drop(columns=["Biotype_raw"]), how="left", left_on="Gene Name", right_on="Gene Symbol")
 
-           merged["abs_fc"] = merged["log_2 fold change"].abs()
+                merged["abs_fc"] = merged["log_2 fold change"].abs()
 
-            # Drug–gene interactions for all genes
-           all_drug_df = get_drug_targets_dgidb_graphql(merged["Gene Name"].unique().tolist())
+                    # Drug–gene interactions for all genes
+                all_drug_df = get_drug_targets_dgidb_graphql(merged["Gene Name"].unique().tolist())
 
-           if not all_drug_df.empty:
-               drug_clean = all_drug_df.copy()
-               drug_summary = drug_clean.groupby("Gene").agg({
-                   "Drug": lambda x: "; ".join(sorted(set(x))),
-                   "Interaction Type": lambda x: "; ".join(sorted(set(x))),
-                   "PMID": lambda x: "; ".join(sorted(set(str(p) for p in x if p != 'N/A'))),
-                   "Interaction Score": "mean"
-               }).reset_index()
-
-               merged = pd.merge(merged, drug_summary, how="left", left_on="Gene Name", right_on="Gene")
-
-            # Add Pathway memberships (use `top_pathways` to map genes)
-            # Only done over topN pathways to reduce computing time
-           if not top_pathways.empty:
-               gene_to_pathways = defaultdict(list)
-               for _, row in top_pathways.iterrows():
-                   pathway_name = row["Term"]
-                   genes_in_pathway = [g.strip().upper() for g in row["Genes"].split(";")]
-                   for gene in genes_in_pathway:
-                       gene_to_pathways[gene].append(pathway_name)
-
-               merged["Gene Name"] = merged["Gene Name"].astype(str).str.strip().str.upper()
-               merged["Pathways"] = merged["Gene Name"].apply(lambda g: "; ".join(gene_to_pathways.get(g, [])))
-
-               drug_summary = drug_clean.groupby("Gene").agg({
+            if not all_drug_df.empty:
+                drug_clean = all_drug_df.copy()
+                drug_summary = drug_clean.groupby("Gene").agg({
                     "Drug": lambda x: "; ".join(sorted(set(x))),
                     "Interaction Type": lambda x: "; ".join(sorted(set(x))),
                     "PMID": lambda x: "; ".join(sorted(set(str(p) for p in x if p != 'N/A'))),
                     "Interaction Score": "mean"
-                     }).reset_index()
-               merged = pd.merge(merged, drug_summary, how="left", left_on="Gene Name", right_on="Gene")
-               # Drop the right-side 'Gene' from drug_summary to not be redundant
-               merged = merged.drop(columns=["Gene_y"], errors="ignore")
+                }).reset_index()
 
-                # Rename Gene_x column
-               if "Gene_x" in merged.columns:
-                    merged = merged.rename(columns={"Gene_x": "Gene"})
+                merged = pd.merge(merged, drug_summary, how="left", left_on="Gene Name", right_on="Gene")
 
-                # Remove suffixes from Drug/Interaction columns when duplicated
-               for col in merged.columns:
-                    if col.endswith("_x") and col[:-2] + "_y" in merged.columns:
-                        # Keep _x version, drop _y
-                        merged = merged.drop(columns=[col[:-2] + "_y"])
-                        merged = merged.rename(columns={col: col[:-2]})
+                # Add Pathway memberships (use `top_pathways` to map genes)
+                # Only done over topN pathways to reduce computing time
+            if not top_pathways.empty:
+                gene_to_pathways = defaultdict(list)
+                for _, row in top_pathways.iterrows():
+                    pathway_name = row["Term"]
+                    genes_in_pathway = [g.strip().upper() for g in row["Genes"].split(";")]
+                    for gene in genes_in_pathway:
+                        gene_to_pathways[gene].append(pathway_name)
 
-                        
-               if not top_pathways.empty:
-                   pathway_genes_unique = pathway_genes[["Gene Name"]].drop_duplicates()
-                   pathway_genes_unique["Pathway Match"] = True
-                   merged = pd.merge(
-                        merged,
-                        pathway_genes[["Gene Name", "abs_fc"]],
-                        how="left",
-                        on="Gene Name"
+                merged["Gene Name"] = merged["Gene Name"].astype(str).str.strip().str.upper()
+                merged["Pathways"] = merged["Gene Name"].apply(lambda g: "; ".join(gene_to_pathways.get(g, [])))
+
+                drug_summary = drug_clean.groupby("Gene").agg({
+                        "Drug": lambda x: "; ".join(sorted(set(x))),
+                        "Interaction Type": lambda x: "; ".join(sorted(set(x))),
+                        "PMID": lambda x: "; ".join(sorted(set(str(p) for p in x if p != 'N/A'))),
+                        "Interaction Score": "mean"
+                        }).reset_index()
+                merged = pd.merge(merged, drug_summary, how="left", left_on="Gene Name", right_on="Gene")
+                # Drop the right-side 'Gene' from drug_summary to not be redundant
+                merged = merged.drop(columns=["Gene_y"], errors="ignore")
+
+                    # Rename Gene_x column
+                if "Gene_x" in merged.columns:
+                        merged = merged.rename(columns={"Gene_x": "Gene"})
+
+                    # Remove suffixes from Drug/Interaction columns when duplicated
+                for col in merged.columns:
+                        if col.endswith("_x") and col[:-2] + "_y" in merged.columns:
+                            # Keep _x version, drop _y
+                            merged = merged.drop(columns=[col[:-2] + "_y"])
+                            merged = merged.rename(columns={col: col[:-2]})
+
+                            
+                if not top_pathways.empty:
+                    pathway_genes_unique = pathway_genes[["Gene Name"]].drop_duplicates()
+                    pathway_genes_unique["Pathway Match"] = True
+                    merged = pd.merge(
+                            merged,
+                            pathway_genes[["Gene Name", "abs_fc"]],
+                            how="left",
+                            on="Gene Name"
+                        )
+
+                            
+                    #Delete duplicated columns
+                merged = merged.drop(columns=["Gene_y", "Gene Symbol", "Tractability_raw", "Gene Name_raw_x", "Gene Name_raw_y", "abs_fc_y", "log_2 fold change_y"], errors="ignore")
+                merged = merged.rename(columns={"Gene_x": "Gene", "abs_fc_x" : "abs_fc"})
+                dupes = merged.columns[merged.columns.duplicated()].tolist()
+                merged = merged.loc[:, ~merged.columns.duplicated(keep="first")]
+
+                    #Add pathways in which gene interacts
+                gene_to_pathways = defaultdict(list)
+
+                if not top_pathways.empty:
+                    for _, row in top_pathways.iterrows():
+                        pathway_name = row["Term"]
+                        genes_in_pathway = [g.strip().upper() for g in row["Genes"].split(";")]
+                        for gene in genes_in_pathway:
+                            gene_to_pathways[gene].append(pathway_name)
+
+                merged["Gene Name"] = merged["Gene Name"].astype(str).str.strip().str.upper()
+                merged["Pathways"] = merged["Gene Name"].apply(lambda g: "; ".join(gene_to_pathways.get(g, [])))
+                merged = merged.drop(columns=["Gene Name_raw", "abs_fc", "Ensembl ID"])
+                
+                merged["Gene"] = merged["Gene"].apply(
+                        lambda gene_id: f'<a href="https://www.ensembl.org/Multi/Search/Results?q={gene_id}" target="_blank">{gene_id}</a>'
                     )
+                
+                merged_newNames = merged.rename(columns={
+                    "Gene":"Ensembl ID",
+                    "Gene Name":"Gene"
+                })
+                
+                # Apply to your merged table
+                merged_with_links = add_links_to_final_table(merged_newNames)
 
-                        
-                 #Delete duplicated columns
-               merged = merged.drop(columns=["Gene_y", "Gene Symbol", "Tractability_raw", "Gene Name_raw_x", "Gene Name_raw_y", "abs_fc_y", "log_2 fold change_y"], errors="ignore")
-               merged = merged.rename(columns={"Gene_x": "Gene", "abs_fc_x" : "abs_fc"})
-               dupes = merged.columns[merged.columns.duplicated()].tolist()
-               merged = merged.loc[:, ~merged.columns.duplicated(keep="first")]
 
-                 #Add pathways in which gene interacts
-               gene_to_pathways = defaultdict(list)
+                    # Show and download button
+                st.markdown("## 📦 Download Full Results Table")
+                #st.dataframe(merged, use_container_width=True)
+                
+                html_final_table = merged_with_links.to_html(escape=False, index=False, table_id="finalTable")
 
-               if not top_pathways.empty:
-                   for _, row in top_pathways.iterrows():
-                       pathway_name = row["Term"]
-                       genes_in_pathway = [g.strip().upper() for g in row["Genes"].split(";")]
-                       for gene in genes_in_pathway:
-                           gene_to_pathways[gene].append(pathway_name)
+                html_code_final = f"""
+                    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+                    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-               merged["Gene Name"] = merged["Gene Name"].astype(str).str.strip().str.upper()
-               merged["Pathways"] = merged["Gene Name"].apply(lambda g: "; ".join(gene_to_pathways.get(g, [])))
-               merged = merged.drop(columns=["Gene Name_raw", "abs_fc", "Ensembl ID"])
-               
-               merged["Gene"] = merged["Gene"].apply(
-                    lambda gene_id: f'<a href="https://www.ensembl.org/Multi/Search/Results?q={gene_id}" target="_blank">{gene_id}</a>'
+                    <style>
+                        .dataTables_wrapper, .dataTables_wrapper * {{
+                            font-family: "Segoe UI", "Helvetica", "Arial", sans-serif !important;
+                            color: #31333f !important;
+                            font-size: 12px !important;
+                        }}
+
+                        #finalTable {{
+                            width: 100% !important;
+                        }}
+
+                        #finalTable, #finalTable thead, #finalTable tbody, #finalTable tr, #finalTable td, #finalTable th {{
+                            background-color: white !important;
+                            color: #31333f !important;
+                            border-color: #ccc !important;
+                        }}
+
+                        #finalTable thead th {{
+                            font-weight: 600 !important;
+                        }}
+
+                        #finalTable input {{
+                            width: 100%;
+                            box-sizing: border-box;
+                            background-color: white !important;
+                            color: #31333f !important;
+                            font-size: 14px !important;
+                            border: 1px solid #ccc !important;
+                        }}
+
+                        .dataTables_length select {{
+                            background-color: white !important;
+                            color: #31333f !important;
+                            border: 1px solid #ccc !important;
+                            font-size: 14px !important;
+                        }}
+
+                        .dataTables_info {{
+                            color: #31333f !important;
+                        }}
+
+                        .dataTables_paginate a {{
+                            color: #31333f !important;
+                            font-size: 14px !important;
+                            font-weight: normal !important;
+                            padding: 6px 12px;
+                            border-radius: 6px;
+                            text-decoration: none;
+                            margin: 0 2px;
+                        }}
+
+                        .dataTables_paginate a.current {{
+                            background-color: #f0f0f0 !important;
+                            font-weight: bold !important;
+                            border: 1px solid #aaa !important;
+                        }}
+
+                        .dataTables_paginate a:hover {{
+                            background-color: #e3e3e3 !important;
+                        }}
+                    </style>
+
+                    <script>
+                        $(document).ready(function() {{
+                            var table = $('#finalTable').DataTable({{
+                                scrollCollapse: true,
+                                paging: true,
+                                orderCellsTop: true,
+                                fixedHeader: false,
+                                autoWidth: false
+                            }});
+
+                            $('#finalTable thead tr').clone(true).appendTo('#finalTable thead');
+                            $('#finalTable thead tr:eq(1) th').each(function(i) {{
+                                var title = $(this).text();
+                                $(this).html('<input type="text" placeholder="Search ' + title + '" />');
+                            }});
+
+                            $('#finalTable thead').on('keyup change', 'input', function () {{
+                                let i = $(this).parent().index();
+                                table.column(i).search(this.value).draw();
+                            }});
+                        }});
+                    </script>
+
+                    <div style="overflow-x:auto">
+                        {html_final_table}
+                    </div>
+                    """
+                height = estimate_table_height(merged)
+                components.html(html_code_final, height=height, scrolling=True)
+
+                st.download_button(
+                        "📥 Download Full Combined CSV",
+                        merged.to_csv(index=False),
+                        "full_results_table.csv",
+                        "text/csv"
                 )
-               
-               merged_newNames = merged.rename(columns={
-                   "Gene":"Ensembl ID",
-                   "Gene Name":"Gene"
-               })
-
-
-                 # Show and download button
-               st.markdown("## 📦 Download Full Results Table")
-               #st.dataframe(merged, use_container_width=True)
-               
-               html_final_table = merged_newNames.to_html(escape=False, index=False, table_id="finalTable")
-
-               html_code_final = f"""
-                <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-                <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-
-                <style>
-                    .dataTables_wrapper, .dataTables_wrapper * {{
-                        font-family: "Segoe UI", "Helvetica", "Arial", sans-serif !important;
-                        color: #31333f !important;
-                        font-size: 12px !important;
-                    }}
-
-                    #finalTable {{
-                        width: 100% !important;
-                    }}
-
-                    #finalTable, #finalTable thead, #finalTable tbody, #finalTable tr, #finalTable td, #finalTable th {{
-                        background-color: white !important;
-                        color: #31333f !important;
-                        border-color: #ccc !important;
-                    }}
-
-                    #finalTable thead th {{
-                        font-weight: 600 !important;
-                    }}
-
-                    #finalTable input {{
-                        width: 100%;
-                        box-sizing: border-box;
-                        background-color: white !important;
-                        color: #31333f !important;
-                        font-size: 14px !important;
-                        border: 1px solid #ccc !important;
-                    }}
-
-                    .dataTables_length select {{
-                        background-color: white !important;
-                        color: #31333f !important;
-                        border: 1px solid #ccc !important;
-                        font-size: 14px !important;
-                    }}
-
-                    .dataTables_info {{
-                        color: #31333f !important;
-                    }}
-
-                    .dataTables_paginate a {{
-                        color: #31333f !important;
-                        font-size: 14px !important;
-                        font-weight: normal !important;
-                        padding: 6px 12px;
-                        border-radius: 6px;
-                        text-decoration: none;
-                        margin: 0 2px;
-                    }}
-
-                    .dataTables_paginate a.current {{
-                        background-color: #f0f0f0 !important;
-                        font-weight: bold !important;
-                        border: 1px solid #aaa !important;
-                    }}
-
-                    .dataTables_paginate a:hover {{
-                        background-color: #e3e3e3 !important;
-                    }}
-                </style>
-
-                <script>
-                    $(document).ready(function() {{
-                        var table = $('#finalTable').DataTable({{
-                            scrollCollapse: true,
-                            paging: true,
-                            orderCellsTop: true,
-                            fixedHeader: false,
-                            autoWidth: false
-                        }});
-
-                        $('#finalTable thead tr').clone(true).appendTo('#finalTable thead');
-                        $('#finalTable thead tr:eq(1) th').each(function(i) {{
-                            var title = $(this).text();
-                            $(this).html('<input type="text" placeholder="Search ' + title + '" />');
-                        }});
-
-                        $('#finalTable thead').on('keyup change', 'input', function () {{
-                            let i = $(this).parent().index();
-                            table.column(i).search(this.value).draw();
-                        }});
-                    }});
-                </script>
-
-                <div style="overflow-x:auto">
-                    {html_final_table}
-                </div>
-                """
-               height = estimate_table_height(merged)
-               components.html(html_code_final, height=height, scrolling=True)
-
-               st.download_button(
-                    "📥 Download Full Combined CSV",
-                    merged.to_csv(index=False),
-                    "full_results_table.csv",
-                    "text/csv"
-               )
