@@ -480,9 +480,9 @@ st.markdown("""
 
 <div class="email-label-wrapper">
   <span>Enter user e-mail:</span>
-  <div class="tooltip">ℹ
+  <div class="tooltip">ℹ️
     <span class="tooltiptext">
-      Se necesita el correo electrónico para hacer búsquedas en Entrez.
+      Email adress is necessary for Entrez searches.
     </span>
   </div>
 </div>
@@ -1001,7 +1001,7 @@ if mesh_id:
                         #st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
                         
                         st.download_button(
-                            "📥 Download TopN pathways CSV",
+                            "📥 Download Top N pathways CSV",
                             top_pathways.to_csv(index=False),
                             "topPathways.csv",
                             "text/csv")
@@ -1555,3 +1555,63 @@ if mesh_id:
                         "full_results_table.csv",
                         "text/csv"
                 )
+
+                # --- ZIP con las tablas solicitadas (tal cual están preparadas) ---
+                import io, zipfile, datetime
+
+                # Build the list of available dataframes (desc, filename, df)
+                candidates = []
+                try: candidates.append(("Genes with links",     "genes_with_links.csv", df_selected_with_links))
+                except NameError: pass
+                try: candidates.append(("Open Targets",         "openTargets_df.csv",   openTargets_df))
+                except NameError: pass
+                try: candidates.append(("Top pathways",         "top_pathways.csv",     top_pathways))
+                except NameError: pass
+                try: candidates.append(("Pathway genes",        "pathway_genes.csv",    pathway_genes))
+                except NameError: pass
+                try: candidates.append(("Drug interactions",    "drug_df.csv",          drug_df))
+                except NameError: pass
+
+                if candidates:
+                    st.markdown("### Select tables to include in ZIP")
+
+                    # Table headers
+                    h1, h2 = st.columns([0.12, 0.88])
+                    h1.markdown("** **")
+                    h2.markdown("**Dataframe**")
+
+                    # Individual checkboxes
+                    for desc, fname, df in candidates:
+                        c1, c2 = st.columns([0.12, 0.88])
+                        c1.checkbox(
+                            label=f"Include {desc}",
+                            key=f"_dl_{fname}",
+                            value=True,                       # ✅ selected by default
+                            label_visibility="collapsed"
+                        )
+                        c2.write(f"{desc} ({len(df)} rows)")
+
+                    # Gather selected
+                    selected = [(fname, df) for _, fname, df in candidates if st.session_state.get(f"_dl_{fname}", False)]
+
+                    if not selected:
+                        st.warning("Select at least one table to enable the download.")
+                    else:
+                        # Build ZIP
+                        zip_buf = io.BytesIO()
+                        with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
+                            for fname, df in selected:
+                                zf.writestr(fname, df.to_csv(index=False))
+                        zip_buf.seek(0)
+
+                        # Styled download button (same class as your green CSV button)
+                        st.download_button(
+                            label="📥 Download selected (.zip)",
+                            data=zip_buf.getvalue(),
+                            file_name=f"selected_tables_{datetime.date.today().isoformat()}.zip",
+                            mime="application/zip",
+                            key="zip_download_btn"
+                        )
+                else:
+                    st.info("No tables available for download.")
+
