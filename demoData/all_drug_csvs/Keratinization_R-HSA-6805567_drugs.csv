@@ -1,0 +1,3 @@
+Gene,Drug,Interaction Type,Directionality,Source,PMID,Interaction Score
+"<a href=""https://dgidb.org/results?searchType=gene&searchTerms=KRTAP10-4"" target=""_blank"">KRTAP10-4</a>","<a href=""https://dgidb.org/results?searchType=drug&searchTerms=CLOPIDOGREL"" target=""_blank"">CLOPIDOGREL</a>",N/A,N/A,PharmGKB,"<a href=""https://pubmed.ncbi.nlm.nih.gov/34158603/"" target=""_blank"">34158603</a>",1.491537101682444
+"<a href=""https://dgidb.org/results?searchType=gene&searchTerms=KRTAP10-4"" target=""_blank"">KRTAP10-4</a>","<a href=""https://dgidb.org/results?searchType=drug&searchTerms=ASPIRIN"" target=""_blank"">ASPIRIN</a>",N/A,N/A,PharmGKB,"<a href=""https://pubmed.ncbi.nlm.nih.gov/34158603/"" target=""_blank"">34158603</a>",0.5865595343695004
