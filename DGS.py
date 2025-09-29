@@ -9,7 +9,17 @@ import numpy as np
 import urllib.parse
 import plotly.express as px
 import base64
+import threading
+import os
+import urllib.parse
+import gseapy as gp
+import re
+import io, zipfile, datetime
 from collections import defaultdict
+from streamlit_autorefresh import st_autorefresh
+import re
+import urllib.parse
+import streamlit.components.v1 as components
 
 Entrez.email = "blanca.puechegranados@usp.ceu.es"
 GRAPHQL_URL = "https://dgidb.org/api/graphql"
@@ -113,6 +123,9 @@ def get_gene_name_from_ensembl(ensembl_id):
     if response.status_code == 200:
         data = response.json()
         return data.get("display_name", "Not Found")
+    elif response.status_code == 429:
+        st.warning("Error 429: Resource Exceeded. Please try again later.")
+        st.stop()
     return "Not Found"
 
 def fetch_gene_names(df):
@@ -188,10 +201,7 @@ def find_possible_target_of_drugs(ensembl_id):
         }
     except:
         return None
-    
-import urllib.parse
-import gseapy as gp
-import re
+
 
 def analyze_pathways(df, number):
     """
@@ -367,8 +377,6 @@ def normalize_disease_name(name: str) -> str:
         return f"{parts[1]} {parts[0]}"
     return name
 
-import re
-import urllib.parse
 
 def add_links_to_final_table(df):
     df = df.copy()
@@ -416,12 +424,71 @@ def add_links_to_final_table(df):
     
     return df
 
+def save_pathway_csvs(df_selected, top_pathways, output_dir="all_pathway_genes_csvs"):
+    os.makedirs(output_dir, exist_ok=True)
+    
+    for _, row in top_pathways.iterrows():
+        pathway_name = row["Term"]
+        pathway_genes = get_overlapping_genes(df_selected, row)
+        pathway_genes = pathway_genes.drop(columns=["Gene Name_raw", "abs_fc"])
+        pathway_genes_newNames = pathway_genes.rename(columns={"Gene":"Ensembl ID", "Gene Name":"Gene"})
+        safe_name = pathway_name.replace("/", "_").replace(" ", "_")
+        csv_path = os.path.join(output_dir, f"{safe_name}.csv")
+        pathway_genes_newNames.to_csv(csv_path, index=False)
+
+    # Signal completion
+    with open(os.path.join(output_dir, ".done"), "w") as f:
+        f.write("done")
+
+def save_drug_csvs(df_selected, top_pathways, output_dir="all_drug_csvs"):
+    os.makedirs(output_dir, exist_ok=True)
+    
+    for _, row in top_pathways.iterrows():
+        pathway_name = row["Term"]
+        pathway_genes = get_overlapping_genes(df_selected, row)
+        drug_df = get_drug_targets_dgidb_graphql(pathway_genes["Gene Name"].tolist())
+        if not drug_df.empty:
+            drug_df = drug_with_links(drug_df)
+            safe_name = pathway_name.replace("/", "_").replace(" ", "_")
+            csv_path = os.path.join(output_dir, f"{safe_name}_drugs.csv")
+            drug_df.to_csv(csv_path, index=False)
+
+    # Signal completion
+    with open(os.path.join(output_dir, ".done"), "w") as f:
+        f.write("done")
+
+
+def create_combined_zip(zip_path, folders=[], extra_files=[]):
+    """
+    Create a zip containing all CSVs from the given folders + any extra files.
+    
+    Parameters:
+        zip_path (str): Path where the zip will be saved.
+        folders (list of str): List of folder paths containing CSVs.
+        extra_files (list of str): List of extra CSV file paths to include.
+    """
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        # Add all CSVs from each folder
+        for folder in folders:
+            for root, _, files in os.walk(folder):
+                for file in files:
+                    if file.endswith(".csv"):
+                        file_path = os.path.join(root, file)
+                        zipf.write(file_path, arcname=file)
+        
+        # Add any extra individual files
+        for file_path in extra_files:
+            if os.path.exists(file_path):
+                zipf.write(file_path, arcname=os.path.basename(file_path))
 
 
 
-st.title("Disease-Gene-Drug Analysis Dashboard")
+st.title("Tractome")
+st.markdown(
+    "<p style='font-size:18px; font-weight:bold;'>Integrative analysis of upregulated disease genes, pathways, and drug interactions.</p>",
+    unsafe_allow_html=True
+)
 
-import streamlit as st
 
 # Style and layout (tooltip)
 st.markdown("""
@@ -534,10 +601,13 @@ if mesh_id:
             "Gene Name":"Gene"
         })
         
-        import streamlit.components.v1 as components
 
         # Title
         st.markdown("## Gene Table with Links to Ensembl")
+        # Check if the DataFrame is empty
+        if df_selected_with_links_newNames.empty:
+            st.warning("The gene table is empty. Stopping the program.")
+            st.stop()
 
         # Conversion of dataframe to HTML
         html_table = df_selected_with_links_newNames.to_html(escape=False, index=False, table_id="geneTable")
@@ -1037,6 +1107,7 @@ if mesh_id:
                         # Render HTML table with scroll
                         html_genespathway_table = pathway_genes_newNames.to_html(escape=False, index=False, table_id="pathwayGeneTable")
 
+
                         # HTML and DataTables JS
                         html_code_pathway = f"""
                         <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -1266,6 +1337,7 @@ if mesh_id:
                     height = estimate_table_height(drug_df)
                     components.html(html_code_drug, height=height, scrolling=True)
                     #st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+                    
         
                     st.download_button("📥 Download Drug Interactions CSV", drug_df.to_csv(index=False), "drug_interactions.csv", "text/csv")
                     
@@ -1556,9 +1628,8 @@ if mesh_id:
                         "text/csv"
                 )
 
-                # --- ZIP con las tablas solicitadas (tal cual están preparadas) ---
-                import io, zipfile, datetime
 
+                # --- ZIP with chosen tables (as they are) ---
                 # Build the list of available dataframes (desc, filename, df)
                 candidates = []
                 try: candidates.append(("Genes with links",     "genes_with_links.csv", df_selected_with_links))
@@ -1586,7 +1657,7 @@ if mesh_id:
                         c1.checkbox(
                             label=f"Include {desc}",
                             key=f"_dl_{fname}",
-                            value=True,                       # ✅ selected by default
+                            value=True,  # selected by default
                             label_visibility="collapsed"
                         )
                         c2.write(f"{desc} ({len(df)} rows)")
@@ -1594,17 +1665,20 @@ if mesh_id:
                     # Gather selected
                     selected = [(fname, df) for _, fname, df in candidates if st.session_state.get(f"_dl_{fname}", False)]
 
+                # Create columns for the two download buttons
+                col1, col2 = st.columns(2)
+
+                # --- Column 1: Download selected tables ---
+                with col1:
                     if not selected:
                         st.warning("Select at least one table to enable the download.")
                     else:
-                        # Build ZIP
                         zip_buf = io.BytesIO()
                         with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
                             for fname, df in selected:
                                 zf.writestr(fname, df.to_csv(index=False))
                         zip_buf.seek(0)
 
-                        # Styled download button (same class as your green CSV button)
                         st.download_button(
                             label="📥 Download selected (.zip)",
                             data=zip_buf.getvalue(),
@@ -1612,6 +1686,71 @@ if mesh_id:
                             mime="application/zip",
                             key="zip_download_btn"
                         )
-                else:
-                    st.info("No tables available for download.")
 
+                # --- Column 2: Download all tables ---
+                with col2:
+                    # Define folders containing your CSVs
+                    genes_folder = "all_pathway_genes_csvs"
+                    drugs_folder = "all_drug_csvs"
+
+                    # Expected counts (for progress bar)
+                    expected_pathway_files = len(top_pathways)
+                    expected_drug_files = len(top_pathways)
+                    expected_total = expected_pathway_files + expected_drug_files
+
+                    # Optional extra CSVs
+                    extra_files = [
+                        "genes.csv",
+                        "openTargets_genes.csv",
+                        "topPathways.csv",
+                        "genes_pathway.csv",
+                        "drug_interactions.csv",
+                        "full_results_table.csv"
+                    ]
+
+                    def count_csvs(folder):
+                        return len([f for f in os.listdir(folder) if f.endswith(".csv")])
+
+                    st.markdown(
+                        "⚠️ **Note:** Clicking the button below will start the process of generating and packaging all tables "
+                        "(it will generate all the tables for each pathway). This may take a few minutes depending on your system and file sizes."
+                    )
+
+                    if st.button("Generate and Download Tables"):
+
+                        # Barra de progreso
+                        progress = st.progress(0)
+
+                        # Generar Pathway CSVs
+                        with st.spinner("Generating pathway CSVs..."):
+                            save_pathway_csvs(df_selected, top_pathways, output_dir=genes_folder)
+                            progress.progress(expected_pathway_files / expected_total)
+
+                        # Generar Drug CSVs
+                        with st.spinner("Generating drug CSVs..."):
+                            save_drug_csvs(df_selected, top_pathways, output_dir=drugs_folder)
+                            progress.progress(1.0)
+
+                        st.success("✅ All tables are ready!")
+
+                        # Crear ZIP en memoria
+                        zip_buf = io.BytesIO()
+                        with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
+                            # Add generated CSVs
+                            for folder in [genes_folder, drugs_folder]:
+                                for file in os.listdir(folder):
+                                    if file.endswith(".csv"):
+                                        zf.write(os.path.join(folder, file), arcname=file)
+                            # Add extra files
+                            for f in extra_files:
+                                if os.path.exists(f):
+                                    zf.write(f, arcname=os.path.basename(f))
+
+                        zip_buf.seek(0)
+
+                        st.download_button(
+                            label="📥 Download All Tables",
+                            data=zip_buf.getvalue(),
+                            file_name="all_tables.zip",
+                            mime="application/zip"
+                        )
