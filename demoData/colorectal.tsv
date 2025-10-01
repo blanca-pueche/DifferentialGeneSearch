@@ -1,0 +1,319 @@
+Gene	Species	Experiment accession	Comparison	log_2 fold change	Adjusted p-value	t-statistic
+ENSG00000174227	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	11.1	1.75506237219242e-8	
+ENSG00000186603	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	10.3	3.75269960734227e-7	
+ENSG00000165819	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	10.3	0.0000016354853327998	
+ENSG00000232956	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	10.2	5.95733951584425e-7	
+ENSG00000142528	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	10	1.75260093213921e-7	
+ENSG00000163006	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	10	2.90036268132508e-7	
+ENSG00000103316	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	10	0.0000016354853327998	
+ENSG00000031691	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	9.9	1.22597221233381e-7	
+ENSG00000203499	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	9.7	0.00000209376452395141	
+ENSG00000163026	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	9.7	0.0000986692976160176	
+ENSG00000197296	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	9.7	0.00016937545800975	
+ENSG00000107815	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	9.6	0.0000133400603905963	
+ENSG00000174227	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	9.6	0.000287280776938896	
+ENSG00000139668	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	9.5	0.000419100548482955	
+ENSG00000101255	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	9.4	1.97945597303982e-8	
+ENSG00000142149	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	9.3	0.00000175403569897103	
+ENSG00000094804	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	9.3	0.0000255341483500021	
+ENSG00000165626	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	9.3	0.0000328576790764805	
+ENSG00000162929	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	9.3	0.000259993279202324	
+ENSG00000100979	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	9.3	0.000538105737196023	
+ENSG00000174405	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	9.2	0.00000175403569897103	
+ENSG00000135094	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	9.2	0.0000203999980343911	
+ENSG00000134193	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P04' vs 'HT-29; adenocarcinoma of colon; P0'	9.1	6.87829447298938e-14	
+ENSG00000130714	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	9.1	5.38698143217496e-7	
+ENSG00000264575	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	9.1	0.00000172214798516119	
+ENSG00000111490	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	9	0.00000104362775131278	
+ENSG00000120093	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	9	0.00000759321669694188	
+ENSG00000134193	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P10' vs 'HT-29; adenocarcinoma of colon; P0'	8.9	1.2648524297492e-8	
+ENSG00000109466	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	8.9	2.29071294010472e-8	
+ENSG00000272686	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.9	0.00000217830644409972	
+ENSG00000170956	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.9	0.0000282295217565316	
+ENSG00000113356	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.9	0.0000607815252050318	
+ENSG00000214039	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	8.8	3.57286010471694e-61	
+ENSG00000172201	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.8	0.000122692714806029	
+ENSG00000111186	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	8.8	0.000753983343566545	
+ENSG00000103356	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.8	0.00125109935873611	
+ENSG00000177542	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	8.7	1.23322158564274e-7	
+ENSG00000120798	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.7	0.00119919878023951	
+ENSG00000105388	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P10' vs 'HT-29; adenocarcinoma of colon; P0'	8.6	1.47858907893379e-10	
+ENSG00000125962	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.6	0.0006907679823614	
+ENSG00000143344	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	8.6	0.00619024184449984	
+ENSG00000131016	homo sapiens	E-GEOD-48433	'COLO 205; adenocarcinoma of colon; P04' vs 'COLO 205; adenocarcinoma of colon; P0'	8.5	5.2269568597618e-11	
+ENSG00000112655	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	8.5	3.70793915080905e-9	
+ENSG00000155100	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.5	1.75260093213921e-7	
+ENSG00000143228	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	8.5	0.00283499091786691	
+ENSG00000118762	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.5	0.00648047506213921	
+ENSG00000131016	homo sapiens	E-GEOD-48433	'COLO 205; adenocarcinoma of colon; P10' vs 'COLO 205; adenocarcinoma of colon; P0'	8.4	2.57581265929139e-10	
+ENSG00000234912	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	8.4	0.00002645870757309	
+ENSG00000146243	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.4	0.000960535161089571	
+ENSG00000227403	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.4	0.00125109935873611	
+ENSG00000215417	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.4	0.00128360129754421	
+ENSG00000143344	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	8.4	0.00790144175092442	
+ENSG00000184860	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	8.3	0.00000129505009449895	
+ENSG00000083307	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.3	0.0000502886706954894	
+ENSG00000102053	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.3	0.00065948944075346	
+ENSG00000137561	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.3	0.00186798346992747	
+ENSG00000120647	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.3	0.00730923427965084	
+ENSG00000078177	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.3	0.0122788001664946	
+ENSG00000031691	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.2	0.0000017117066287221	
+ENSG00000166881	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	8.2	0.000335533849122737	
+ENSG00000146243	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	8.2	0.00139188254231238	
+ENSG00000270587	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.1	0.0000953474437845122	
+ENSG00000102053	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	8.1	0.00099757183674278	
+ENSG00000186625	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.1	0.00125109935873611	
+ENSG00000223547	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.1	0.00249082109381704	
+ENSG00000164970	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8.1	0.0033827787259142	
+ENSG00000164970	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	8.1	0.00394628578710332	
+ENSG00000157110	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8	0.0000017117066287221	
+ENSG00000180071	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	8	0.000386760137543075	
+ENSG00000144045	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8	0.00648047506213921	
+ENSG00000279117	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	8	0.0121073882843492	
+ENSG00000198467	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.9	0.00012406641033482	
+ENSG00000114698	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	7.9	0.00099757183674278	
+ENSG00000186130	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	7.9	0.00120131392221007	
+ENSG00000215864	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.9	0.00167611695397715	
+ENSG00000228352	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.9	0.00276369643922509	
+ENSG00000174705	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.9	0.00486804452664589	
+ENSG00000225434	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.8	0.002528512856461	
+ENSG00000275004	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.8	0.00314770551670948	
+ENSG00000156931	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	7.8	0.00777374303669612	
+ENSG00000163071	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	7.8	0.00868616452995422	
+ENSG00000197635	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.8	0.0128682799139378	
+ENSG00000103356	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	7.8	0.0271014765105568	
+ENSG00000026025	homo sapiens	E-GEOD-48433	'HCT-116; colon carcinoma; P10' vs 'HCT-116; colon carcinoma; P0'	7.7	5.53721690196508e-10	
+ENSG00000089472	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P10' vs 'HT-29; adenocarcinoma of colon; P0'	7.7	1.47659854779843e-8	
+ENSG00000166575	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.7	6.71572990779853e-7	
+ENSG00000278129	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	7.7	0.000419100548482955	
+ENSG00000272931	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	7.7	0.00565879752161233	
+ENSG00000179029	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.7	0.00567266121892698	
+ENSG00000182393	homo sapiens	E-MTAB-3649	'Listeria monocytogenes EGD-e' vs 'none'	7.6	1.7374160342763e-57	
+ENSG00000155100	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	7.6	0.00159981940190202	
+ENSG00000117707	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.6	0.00245151359211636	
+ENSG00000280088	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.6	0.005347184737581	
+ENSG00000224429	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.6	0.00688644445502711	
+ENSG00000128710	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.6	0.0102070634533637	
+ENSG00000268104	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.6	0.0106004216647698	
+ENSG00000164291	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	7.6	0.0108081228024399	
+ENSG00000197696	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	7.6	0.0111321675175149	
+ENSG00000179988	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.6	0.0189570926636402	
+ENSG00000140950	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.6	0.0382847421932613	
+ENSG00000130600	homo sapiens	E-GEOD-48433	'HCT-15; adenocarcinoma of colon; P10' vs 'HCT-15; adenocarcinoma of colon; P0'	7.5	2.02296403804498e-13	
+ENSG00000089472	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P04' vs 'HT-29; adenocarcinoma of colon; P0'	7.5	1.01795793306543e-12	
+ENSG00000173467	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P04' vs 'HT-29; adenocarcinoma of colon; P0'	7.5	1.07764287609141e-11	
+ENSG00000131016	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P10' vs 'HT-29; adenocarcinoma of colon; P0'	7.5	4.09257084803391e-8	
+ENSG00000180801	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	7.5	0.0000770866511038482	
+ENSG00000102870	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.5	0.00186798346992747	
+ENSG00000233621	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	7.5	0.00235298081016701	
+ENSG00000103021	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	7.5	0.0203224034290854	
+ENSG00000181634	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.5	0.0225612591892226	
+ENSG00000128965	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.5	0.0311876490106974	
+ENSG00000128714	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.5	0.0345043060957465	
+ENSG00000139668	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.5	0.0387328546545156	
+ENSG00000254343	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.5	0.0393474745400667	
+ENSG00000128591	homo sapiens	E-GEOD-41586	'5-aza-deoxy-cytidine; 5 micromolar' vs 'none'	7.4	8.90479918307561e-237	
+ENSG00000244342	homo sapiens	E-MTAB-9207	'KRAS-G13D expression' vs 'wild type genotype' in 'CFIm25 siRNA'	7.4	1.89766512633177e-168	
+ENSG00000105388	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P04' vs 'HT-29; adenocarcinoma of colon; P0'	7.4	8.55037052748046e-10	
+ENSG00000079482	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	7.4	0.0000141983602656831	
+ENSG00000033327	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.4	0.000425587245704019	
+ENSG00000144115	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.4	0.00190052220755184	
+ENSG00000142556	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.4	0.00631943785057486	
+ENSG00000272277	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.4	0.0101781359575361	
+ENSG00000170448	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.4	0.0149804645011152	
+ENSG00000162804	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.4	0.0191527117201875	
+ENSG00000184292	homo sapiens	E-GEOD-48433	'HCC-2998; colon carcinoma; P10' vs 'HCC-2998; colon carcinoma; P0'	7.3	9.74217290701139e-12	
+ENSG00000044459	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.3	0.00125109935873611	
+ENSG00000285533	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	7.3	0.00469704362681498	
+ENSG00000196663	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.3	0.00795226287749509	
+ENSG00000249631	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.3	0.0232584511664314	
+ENSG00000115165	homo sapiens	E-GEOD-48433	'COLO 205; adenocarcinoma of colon; P10' vs 'COLO 205; adenocarcinoma of colon; P0'	7.2	2.35539524907272e-10	
+ENSG00000118496	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.2	5.65677063122109e-7	
+ENSG00000069943	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.2	0.00022739683698763	
+ENSG00000243926	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	7.2	0.00400414251400736	
+ENSG00000145911	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.2	0.00509250204912645	
+ENSG00000228037	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.2	0.0060241802502037	
+ENSG00000144026	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	7.2	0.0174187276810296	
+ENSG00000253438	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	7.2	0.0271014765105568	
+ENSG00000281332	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.2	0.027410516271007	
+ENSG00000119922	homo sapiens	E-MTAB-3649	'Listeria monocytogenes EGD-e' vs 'none'	7.1	0	
+ENSG00000103460	homo sapiens	E-GEOD-48433	'HCC-2998; colon carcinoma; P10' vs 'HCC-2998; colon carcinoma; P0'	7.1	6.76736889259447e-13	
+ENSG00000139350	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7.1	0.0000266748374223885	
+ENSG00000033327	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	7.1	0.000528223924919027	
+ENSG00000213366	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	7.1	0.00327913826617364	
+ENSG00000189362	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	7.1	0.00486025415950914	
+ENSG00000163735	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	7	2.12563834194291e-27	
+ENSG00000137673	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	7	1.1406995129355e-21	
+ENSG00000173467	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P10' vs 'HT-29; adenocarcinoma of colon; P0'	7	0.000001770448945741	
+ENSG00000109189	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7	0.012743932550339	
+ENSG00000225706	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	7	0.0297931157805882	
+ENSG00000197635	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	7	0.0309358565965129	
+ENSG00000124787	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	6.9	0.00000133695379130356	
+ENSG00000233621	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	6.9	0.00195284680219569	
+ENSG00000233325	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.9	0.0183033755944596	
+ENSG00000198883	homo sapiens	E-GEOD-41586	'5-aza-deoxy-cytidine; 5 micromolar' vs 'none'	6.8	2.49217299508375e-93	
+ENSG00000105989	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	6.8	2.67514192018438e-49	
+ENSG00000079112	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P04' vs 'HT-29; adenocarcinoma of colon; P0'	6.8	4.04579365223259e-12	
+ENSG00000115457	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P10' vs 'HT-29; adenocarcinoma of colon; P0'	6.8	4.48796252380262e-9	
+ENSG00000086548	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P10' vs 'HT-29; adenocarcinoma of colon; P0'	6.8	1.62301995301381e-8	
+ENSG00000102837	homo sapiens	E-GEOD-48433	'HCC-2998; colon carcinoma; P01' vs 'HCC-2998; colon carcinoma; P0'	6.8	2.00539086202007e-7	
+ENSG00000163214	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.8	0.000405092268278029	
+ENSG00000143061	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	6.8	0.00237800956419385	
+ENSG00000180801	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.8	0.00449124511052707	
+ENSG00000110077	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.8	0.012743932550339	
+ENSG00000086848	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.8	0.0178017155952224	
+ENSG00000135114	homo sapiens	E-MTAB-3649	'Listeria monocytogenes EGD-e' vs 'none'	6.7	0	
+ENSG00000196188	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P10' vs 'HT-29; adenocarcinoma of colon; P0'	6.7	6.6105894889226e-9	
+ENSG00000130600	homo sapiens	E-GEOD-48433	'HCT-15; adenocarcinoma of colon; P04' vs 'HCT-15; adenocarcinoma of colon; P0'	6.7	1.29800024408531e-8	
+ENSG00000168612	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	6.7	0.000010846738926406	
+ENSG00000101276	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.7	0.0000953474437845122	
+ENSG00000120093	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	6.7	0.000434857524879288	
+ENSG00000176248	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	6.7	0.00263442763420916	
+ENSG00000151208	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.7	0.00614878575481081	
+ENSG00000213366	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.7	0.00691016528771393	
+ENSG00000166762	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.7	0.00796460922118305	
+ENSG00000239713	homo sapiens	E-MTAB-9207	'KRAS-G13D expression' vs 'wild type genotype' in 'scrambled siRNA'	6.6	3.75196364659766e-115	
+ENSG00000170373	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	6.6	8.47466894053826e-17	
+ENSG00000147041	homo sapiens	E-GEOD-48433	'HCT-116; colon carcinoma; P04' vs 'HCT-116; colon carcinoma; P0'	6.6	0.0000138045861864235	
+ENSG00000015153	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	6.6	0.0000513569155770193	
+ENSG00000205659	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.6	0.00430148053860024	
+ENSG00000196741	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.6	0.0202096438883919	
+ENSG00000143971	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.6	0.0228369958633643	
+ENSG00000271503	homo sapiens	E-MTAB-3649	'Listeria monocytogenes EGD-e' vs 'none'	6.5	1.26754011605185e-39	
+ENSG00000086548	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P04' vs 'HT-29; adenocarcinoma of colon; P0'	6.5	1.52554808714918e-12	
+ENSG00000169908	homo sapiens	E-GEOD-48433	'HCT-116; colon carcinoma; P10' vs 'HCT-116; colon carcinoma; P0'	6.5	6.97367450003256e-9	
+ENSG00000103042	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.5	0.000981820928285962	
+ENSG00000185479	homo sapiens	E-GEOD-48433	'HCT-116; colon carcinoma; P04' vs 'HCT-116; colon carcinoma; P0'	6.5	0.00535571165598289	
+ENSG00000281332	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	6.5	0.0271014765105568	
+ENSG00000255857	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.5	0.0311442923932541	
+ENSG00000152661	homo sapiens	E-MTAB-9207	'KRAS-G13D expression' vs 'wild type genotype' in 'CFIm25 siRNA'	6.4	1.11354693318811e-229	
+ENSG00000233887	homo sapiens	E-GEOD-41586	'5-aza-deoxy-cytidine; 5 micromolar' vs 'none'	6.4	1.59769265599322e-77	
+ENSG00000171855	homo sapiens	E-MTAB-3649	'Listeria monocytogenes EGD-e' vs 'none'	6.4	1.06568573983289e-33	
+ENSG00000154277	homo sapiens	E-GEOD-48433	'HCC-2998; colon carcinoma; P10' vs 'HCC-2998; colon carcinoma; P0'	6.4	6.2906976217545e-12	
+ENSG00000173467	homo sapiens	E-GEOD-16066	'resistant to methotrexate' vs 'sensitive to methotrexate'	6.4	5.10815735755653e-8	
+ENSG00000167702	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	6.4	0.0003164545596746	
+ENSG00000167523	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.4	0.00369087305950782	
+ENSG00000235109	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	6.4	0.0105205052106466	
+ENSG00000145545	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.4	0.0133342794827578	
+ENSG00000226266	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	6.4	0.0347885932251162	
+ENSG00000196872	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	6.4	0.0472435865806825	
+ENSG00000131080	homo sapiens	E-MTAB-9207	'KRAS-G13D expression' vs 'wild type genotype' in 'CFIm25 siRNA'	6.3	2.06191913100761e-159	
+ENSG00000134321	homo sapiens	E-MTAB-3649	'Listeria monocytogenes EGD-e' vs 'none'	6.3	6.71513686485025e-47	
+ENSG00000166923	homo sapiens	E-MTAB-3649	'Listeria monocytogenes EGD-e' vs 'none'	6.3	2.53144055064222e-34	
+ENSG00000007062	homo sapiens	E-GEOD-48433	'HCC-2998; colon carcinoma; P01' vs 'HCC-2998; colon carcinoma; P0'	6.3	1.32960191435873e-9	
+ENSG00000079112	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P10' vs 'HT-29; adenocarcinoma of colon; P0'	6.3	7.04039652149719e-9	
+ENSG00000109511	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P10' vs 'HT-29; adenocarcinoma of colon; P0'	6.3	1.98433651056958e-8	
+ENSG00000131016	homo sapiens	E-GEOD-48433	'COLO 205; adenocarcinoma of colon; P01' vs 'COLO 205; adenocarcinoma of colon; P0'	6.3	4.61343719533541e-8	
+ENSG00000163735	homo sapiens	E-GEOD-48433	'HCT-15; adenocarcinoma of colon; P04' vs 'HCT-15; adenocarcinoma of colon; P0'	6.3	6.12209663675693e-8	
+ENSG00000109066	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.3	1.75260093213921e-7	
+ENSG00000026025	homo sapiens	E-GEOD-48433	'HCT-116; colon carcinoma; P04' vs 'HCT-116; colon carcinoma; P0'	6.3	0.0000247193011476019	
+ENSG00000108406	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.3	0.000409077363374437	
+ENSG00000228409	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.3	0.00105144219877512	
+ENSG00000036672	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	6.3	0.0361712568520665	
+ENSG00000282815	homo sapiens	E-GEOD-41586	'5-aza-deoxy-cytidine; 5 micromolar' vs 'none'	6.2	2.89510605084828e-71	
+ENSG00000062038	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	6.2	1.41271554517873e-50	
+ENSG00000122641	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	6.2	4.16402375363828e-33	
+ENSG00000204869	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	6.2	1.57235655923468e-25	
+ENSG00000196188	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P04' vs 'HT-29; adenocarcinoma of colon; P0'	6.2	2.28283645431773e-12	
+ENSG00000104537	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P04' vs 'HT-29; adenocarcinoma of colon; P0'	6.2	1.07764287609141e-11	
+ENSG00000102854	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P04' vs 'HT-29; adenocarcinoma of colon; P0'	6.2	1.83715609689749e-11	
+ENSG00000167552	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P10' vs 'HT-29; adenocarcinoma of colon; P0'	6.2	1.43922753773365e-7	
+ENSG00000170956	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	6.2	0.000199590166583937	
+ENSG00000152952	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	6.2	0.00115145667499215	
+ENSG00000177570	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	6.2	0.00422943212810766	
+ENSG00000238045	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	6.2	0.00782197120823679	
+ENSG00000183844	homo sapiens	E-GEOD-48433	'HCT-15; adenocarcinoma of colon; P10' vs 'HCT-15; adenocarcinoma of colon; P0'	6.1	3.70829760978895e-9	
+ENSG00000064393	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P10' vs 'HT-29; adenocarcinoma of colon; P0'	6.1	1.98433651056958e-8	
+ENSG00000124217	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	6.1	6.8336012575258e-7	
+ENSG00000065060	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	6.1	0.0000554505488798556	
+ENSG00000092208	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.1	0.00561133073491701	
+ENSG00000113356	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	6.1	0.0207631567676859	
+ENSG00000085185	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6.1	0.0314866107761611	
+ENSG00000271420	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	6.1	0.0407461005558256	
+ENSG00000268858	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	6.1	0.0418846258352681	
+ENSG00000109113	homo sapiens	E-MTAB-9207	'KRAS-G13D expression' vs 'wild type genotype' in 'CFIm25 siRNA'	6	1.94944844004158e-88	
+ENSG00000228496	homo sapiens	E-MTAB-9207	'KRAS-G13D expression' vs 'wild type genotype' in 'CFIm25 siRNA'	6	4.00463443834374e-88	
+ENSG00000108342	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	6	1.22765290311422e-21	
+ENSG00000118507	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P04' vs 'HT-29; adenocarcinoma of colon; P0'	6	2.29584776457261e-12	
+ENSG00000107165	homo sapiens	E-GEOD-48433	'HCC-2998; colon carcinoma; P10' vs 'HCC-2998; colon carcinoma; P0'	6	2.78250141166536e-12	
+ENSG00000115386	homo sapiens	E-GEOD-48433	'HCC-2998; colon carcinoma; P01' vs 'HCC-2998; colon carcinoma; P0'	6	2.39396083859068e-11	
+ENSG00000115457	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P04' vs 'HT-29; adenocarcinoma of colon; P0'	6	9.42809637982559e-11	
+ENSG00000139211	homo sapiens	E-GEOD-48433	'HCC-2998; colon carcinoma; P10' vs 'HCC-2998; colon carcinoma; P0'	6	1.37865180809402e-10	
+ENSG00000001631	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6	0.0000925906879379353	
+ENSG00000163481	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	6	0.00187170894636578	
+ENSG00000246273	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	6	0.00589921570755958	
+ENSG00000163121	homo sapiens	E-MTAB-3649	'Listeria monocytogenes EGD-e' vs 'none'	5.9	1.38862998849095e-87	
+ENSG00000109113	homo sapiens	E-MTAB-9207	'KRAS-G13D expression' vs 'wild type genotype' in 'scrambled siRNA'	5.9	1.48279435687958e-87	
+ENSG00000157766	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	5.9	1.2092131128762e-45	
+ENSG00000165376	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	5.9	1.41293517754318e-24	
+ENSG00000108176	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P10' vs 'HT-29; adenocarcinoma of colon; P0'	5.9	3.52131485334884e-8	
+ENSG00000095637	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	5.9	0.0059028074503009	
+ENSG00000138639	homo sapiens	E-MTAB-9207	'KRAS-G13D expression' vs 'wild type genotype' in 'scrambled siRNA'	5.8	2.17302115801618e-130	
+ENSG00000130203	homo sapiens	E-MTAB-9207	'KRAS-G13D expression' vs 'wild type genotype' in 'scrambled siRNA'	5.8	3.74947162372426e-119	
+ENSG00000129451	homo sapiens	E-GEOD-76987	'colon sessile serrated adenoma/polyp' vs 'normal'	5.8	8.21310553676824e-75	
+ENSG00000101842	homo sapiens	E-GEOD-46513	'colon sessile serrated adenoma/polyp' vs 'control'	5.8	2.32687247664368e-74	
+ENSG00000215182	homo sapiens	E-GEOD-46513	'colon sessile serrated adenoma/polyp' vs 'control'	5.8	7.20026983394487e-55	
+ENSG00000164283	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	5.8	1.25027914565827e-30	
+ENSG00000156076	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	5.8	4.12725368899273e-11	
+ENSG00000127990	homo sapiens	E-GEOD-48433	'HCC-2998; colon carcinoma; P10' vs 'HCC-2998; colon carcinoma; P0'	5.8	1.11557063068685e-10	
+ENSG00000178372	homo sapiens	E-GEOD-48433	'COLO 205; adenocarcinoma of colon; P10' vs 'COLO 205; adenocarcinoma of colon; P0'	5.8	4.42143075430847e-10	
+ENSG00000263731	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	5.8	0.000259993279202324	
+ENSG00000256683	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	5.8	0.00105896758909102	
+ENSG00000184292	homo sapiens	E-GEOD-48433	'HCC-2998; colon carcinoma; P04' vs 'HCC-2998; colon carcinoma; P0'	5.8	0.0012976964252812	
+ENSG00000124789	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	5.8	0.00187170894636578	
+ENSG00000103460	homo sapiens	E-GEOD-48433	'HCC-2998; colon carcinoma; P04' vs 'HCC-2998; colon carcinoma; P0'	5.8	0.00959724988987665	
+ENSG00000104371	homo sapiens	E-GEOD-48433	'SW-620; adenocarcinoma of colon; P10' vs 'SW-620; adenocarcinoma of colon; P0'	5.8	0.0246497891910866	
+ENSG00000111110	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	5.8	0.0292333111101554	
+ENSG00000273270	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	5.8	0.0298880853605607	
+ENSG00000117791	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	5.8	0.0421627582856188	
+ENSG00000144908	homo sapiens	E-MTAB-9207	'KRAS-G13D expression' vs 'wild type genotype' in 'scrambled siRNA'	5.7	6.17937347821452e-110	
+ENSG00000239713	homo sapiens	E-MTAB-9207	'KRAS-G13D expression' vs 'wild type genotype' in 'CFIm25 siRNA'	5.7	4.51596216359482e-82	
+ENSG00000168952	homo sapiens	E-MTAB-9207	'KRAS-G13D expression' vs 'wild type genotype' in 'scrambled siRNA'	5.7	5.65909845262425e-73	
+ENSG00000103569	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	5.7	2.01617026582692e-29	
+ENSG00000188175	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P04' vs 'HT-29; adenocarcinoma of colon; P0'	5.7	1.07764287609141e-11	
+ENSG00000158528	homo sapiens	E-GEOD-48433	'HCC-2998; colon carcinoma; P10' vs 'HCC-2998; colon carcinoma; P0'	5.7	9.98895938580587e-11	
+ENSG00000170786	homo sapiens	E-GEOD-48433	'COLO 205; adenocarcinoma of colon; P10' vs 'COLO 205; adenocarcinoma of colon; P0'	5.7	3.0785508754024e-9	
+ENSG00000198873	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P10' vs 'HT-29; adenocarcinoma of colon; P0'	5.7	1.40101052454804e-8	
+ENSG00000164761	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P10' vs 'HT-29; adenocarcinoma of colon; P0'	5.7	0.00000627092472812862	
+ENSG00000196705	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	5.7	0.00795226287749509	
+ENSG00000135473	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	5.7	0.0104426696624586	
+ENSG00000143061	homo sapiens	E-MTAB-8803	'EpCAM+CD3-Live+' vs 'UNSORTED' in 'neoplasm'	5.7	0.0415506708234848	
+ENSG00000126259	homo sapiens	E-MTAB-9207	'KRAS-G13D expression' vs 'wild type genotype' in 'scrambled siRNA'	5.6	6.79078551894415e-114	
+ENSG00000206075	homo sapiens	E-GEOD-46513	'colon sessile serrated adenoma/polyp' vs 'control'	5.6	1.83439418614519e-81	
+ENSG00000231023	homo sapiens	E-MTAB-9207	'KRAS-G13D expression' vs 'wild type genotype' in 'scrambled siRNA'	5.6	2.0842536093013e-71	
+ENSG00000123584	homo sapiens	E-MTAB-9207	'KRAS-G13D expression' vs 'wild type genotype' in 'scrambled siRNA'	5.6	1.74923132772629e-70	
+ENSG00000103888	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	5.6	6.94597772570927e-57	
+ENSG00000242265	homo sapiens	E-GEOD-41586	'5-aza-deoxy-cytidine; 5 micromolar' vs 'none'	5.6	2.98357458676145e-56	
+ENSG00000175592	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	5.6	2.11909320654087e-31	
+ENSG00000128422	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	5.6	2.62297620824092e-28	
+ENSG00000169248	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	5.6	9.14153624439582e-19	
+ENSG00000249550	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	5.6	2.96378188787591e-17	
+ENSG00000104419	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P04' vs 'HT-29; adenocarcinoma of colon; P0'	5.6	4.04579365223259e-12	
+ENSG00000131016	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P04' vs 'HT-29; adenocarcinoma of colon; P0'	5.6	9.56073323357951e-10	
+ENSG00000021826	homo sapiens	E-GEOD-48433	'HCC-2998; colon carcinoma; P01' vs 'HCC-2998; colon carcinoma; P0'	5.6	5.43577026791129e-9	
+ENSG00000163735	homo sapiens	E-GEOD-48433	'HCT-15; adenocarcinoma of colon; P01' vs 'HCT-15; adenocarcinoma of colon; P0'	5.6	3.34751677941296e-8	
+ENSG00000109113	homo sapiens	E-GEOD-48433	'SW-620; adenocarcinoma of colon; P10' vs 'SW-620; adenocarcinoma of colon; P0'	5.6	0.000097508755763227	
+ENSG00000164403	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	5.6	0.00157017792941395	
+ENSG00000241484	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	5.6	0.0217213749545261	
+ENSG00000143061	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	5.6	0.0460912349292812	
+ENSG00000176406	homo sapiens	E-MTAB-9207	'KRAS-G13D expression' vs 'wild type genotype' in 'CFIm25 siRNA'	5.5	2.08872935264514e-144	
+ENSG00000134193	homo sapiens	E-GEOD-46513	'colon sessile serrated adenoma/polyp' vs 'control'	5.5	1.90586552639723e-99	
+ENSG00000101842	homo sapiens	E-GEOD-76987	'colon sessile serrated adenoma/polyp' vs 'normal'	5.5	4.95338570500869e-68	
+ENSG00000143194	homo sapiens	E-GEOD-41586	'5-aza-deoxy-cytidine; 5 micromolar' vs 'none'	5.5	6.06776658588173e-49	
+ENSG00000106366	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	5.5	1.15074467269123e-40	
+ENSG00000128422	homo sapiens	E-MTAB-3649	'Listeria monocytogenes EGD-e' vs 'none'	5.5	3.49373471921166e-23	
+ENSG00000130600	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	5.5	6.04599399061428e-19	
+ENSG00000131016	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P01' vs 'HT-29; adenocarcinoma of colon; P0'	5.5	3.8561852568535e-9	
+ENSG00000165949	homo sapiens	E-GEOD-48433	'HCT-116; colon carcinoma; P04' vs 'HCT-116; colon carcinoma; P0'	5.5	5.24430666582422e-8	
+ENSG00000140937	homo sapiens	E-GEOD-48433	'HT-29; adenocarcinoma of colon; P10' vs 'HT-29; adenocarcinoma of colon; P0'	5.5	9.07246105642385e-7	
+ENSG00000124789	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	5.5	0.0000554505488798556	
+ENSG00000263731	homo sapiens	E-MTAB-8803	'normal tissue near to neoplasm' vs 'normal tissue far from neoplasm' in 'EpCAM+CD3-Live+'	5.5	0.00189379841477581	
+ENSG00000072415	homo sapiens	E-MTAB-8803	'neoplasm' vs 'normal tissue near to neoplasm' in 'EpCAM+CD3-Live+'	5.5	0.00547523798403516	
+ENSG00000128591	homo sapiens	E-GEOD-41586	'5-aza-deoxy-cytidine; 10 micromolar' vs 'none'	5.4	4.93964350575664e-98	
+ENSG00000007171	homo sapiens	E-MTAB-3649	'Listeria monocytogenes EGD-e' vs 'none'	5.4	7.39000866074e-61	
+ENSG00000161798	homo sapiens	E-GEOD-76987	'colon sessile serrated adenoma/polyp' vs 'normal'	5.4	3.34952414500963e-60	
+ENSG00000261239	homo sapiens	E-GEOD-41586	'5-aza-deoxy-cytidine; 5 micromolar' vs 'none'	5.4	2.35805146925485e-46	
+ENSG00000113739	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	5.4	3.7304317199219e-46	
+ENSG00000158859	homo sapiens	E-GEOD-76987	'colon adenocarcinoma' vs 'normal'	5.4	2.6033029270414e-38	
+ENSG00000162630	homo sapiens	E-MTAB-3649	'Listeria monocytogenes EGD-e' vs 'none'	5.4	4.09229084199512e-36	
+ENSG00000140279	homo sapiens	E-MTAB-3649	'Listeria monocytogenes EGD-e' vs 'none'	5.4	3.95831468302763e-26	

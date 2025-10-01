@@ -1,23 +1,14 @@
-import os, json, pandas as pd
+import socket
 
-def load_precomputed(demo_root="demoData"):
-    base = os.path.join(demo_root)
-    results = {}
+def find_free_port(start=8501, end=8600):
+    """Find the first available port in the given range."""
+    for port in range(start, end):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind(("", port))
+                return port
+            except OSError:
+                continue
+    raise RuntimeError("No free port found in the range!")
 
-    results["genes"] = pd.read_csv(os.path.join(base, "genes.csv"))
-    results["top_pathways"] = pd.read_csv(os.path.join(base, "topPathways.csv"))
-    results["drug_interactions"] = pd.read_csv(os.path.join(base, "drug_interactions.csv"))
-    results["openTargets"] = pd.read_csv(os.path.join(base, "openTargets.csv"))
-    results["full_table"] = pd.read_csv(os.path.join(base, "full_results_table.csv"))
 
-    if os.path.exists(os.path.join(base, "metadata.json")):
-        with open(os.path.join(base, "metadata.json")) as f:
-            results["metadata"] = json.load(f)
-
-    if os.path.exists(os.path.join(base, "pathway_csvs")):
-        results["pathway_csvs_folder"] = os.path.join(base, "pathway_csvs")
-
-    if os.path.exists(os.path.join(base, "drug_csvs")):
-        results["drug_csvs_folder"] = os.path.join(base, "drug_csvs")
-
-    return results

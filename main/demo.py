@@ -1,21 +1,16 @@
 import streamlit as st
 import pandas as pd
 from Bio import Entrez
-import numpy as np
 import plotly.express as px
 import os
 import re
 import io, zipfile, datetime
-from collections import defaultdict
-from streamlit_autorefresh import st_autorefresh
 import re
 import streamlit.components.v1 as components
-from pipeline import (get_disease_name,generate_expression_atlas_link,fetch_gene_names, find_possible_target_of_drugs, analyze_pathways, get_overlapping_genes,get_drug_targets_dgidb_graphql,drug_with_links, estimate_table_height, normalize_disease_name, add_links_to_final_table, save_pathway_csvs,  save_drug_csvs)
-from utils import find_free_port
+from pipeline import (estimate_table_height, normalize_disease_name, save_pathway_csvs,  save_drug_csvs)
+import time
 from pathlib import Path
-import subprocess
-import webbrowser
-import sys
+
 
 st.markdown("""
     <style>
@@ -78,33 +73,6 @@ st.markdown(
 )
 
 
-demo_path = Path("demo.py")
-
-# Session state guards
-if "demo_started" not in st.session_state:
-    st.session_state.demo_started = False
-if "demo_opened" not in st.session_state:
-    st.session_state.demo_opened = False
-if "demo_port" not in st.session_state:
-    st.session_state.demo_port = None
-
-if st.button("Pre-computed example of MeSH ID: D003110"):
-    port = find_free_port()
-
-    #start demo server
-    subprocess.Popen([
-        sys.executable, "-m", "streamlit", "run", str(demo_path),
-        "--server.port", str(port),
-        "--server.headless", "true",
-    ])
-
-    #display when it runs
-    url = f"http://localhost:{port}"
-    st.info(f"Demo app is running at: {url}")
-
-    webbrowser.open_new_tab(url)
-    
-    
 # Style and layout (tooltip)
 st.markdown("""
 <style>
@@ -170,29 +138,34 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-#Step 1: Text input for email
-email = st.text_input("User e-mail:", key="user_email", label_visibility="collapsed")
+#Step 1: Text input email empty
+email = st.text_input("User e-mail:", key="user_email", label_visibility="collapsed", value="")
 Entrez.email = email
 
-#Step 2: Name from MeshID
-mesh_id = st.text_input("🔍 Enter MeSH ID (e.g., D003920 for Diabetes Mellitus):")
+#Step 2: Name from MeshID default D003110
+mesh_id = st.text_input("🔍 Enter MeSH ID (e.g., D003920 for Diabetes Mellitus):", value="D003110")
 
 spinner = st.spinner
 
 if mesh_id:
     with st.spinner("Fetching disease information..."):
-        disease, disease_url = get_disease_name(mesh_id)
+        disease = "Colonic Neoplasms"
+        disease_url = "https://www.ncbi.nlm.nih.gov/mesh/68003110"
         
         if disease:
             normalized_disease = normalize_disease_name(disease)
             st.success(f"🎯 Disease **[{normalized_disease}]({disease_url})** identified")
             
-            # Step 3: File upload only after disease name is given
-            url = generate_expression_atlas_link(disease_name=normalized_disease)
+            # Step 3: File upload only after disease name is given default link to Expression Atlas
+            url = "https://www.ebi.ac.uk/gxa/search?geneQuery=%5B%5D&species=Homo%20sapiens&conditionQuery=%5B%7B%22value%22%3A%22Colonic%20Neoplasms%22%7D%5D&ds=%7B%22kingdom%22%3A%5B%22animals%22%5D%2C%22regulation%22%3A%5B%22UP%22%5D%7D&bs=%7B%22homo%20sapiens%22%3A%5B%22ORGANISM_PART%22%5D%7D#differential"
             uploaded_file = st.file_uploader(
                 f"📁 Upload Differential Expression File (TSV from Expression Atlas: [link]({url}))",
                 type=["tsv"]
             )
+
+            if uploaded_file is None:
+                #demo Expression Atlas file
+                uploaded_file = "../demoData/colorectal.tsv"
 
             
             
@@ -202,30 +175,16 @@ if mesh_id:
         st.write("Uploaded correctly")
         
         with st.spinner("Mapping Ensembl IDs to gene names..."):
-            df_selected = fetch_gene_names(df_raw)
+            time.sleep(1)
         
-        # Step 4: Obtain Ensembl ID with links for the genes
-        df_selected_with_links = df_selected.copy()
-        df_selected_with_links["Gene"] = df_selected_with_links["Gene"].apply(
-            lambda gene_id: f'<a href="https://www.ensembl.org/Multi/Search/Results?q={gene_id}" target="_blank">{gene_id}</a>'
-        )
-        df_selected_with_links = df_selected_with_links.sort_values(by="log_2 fold change", ascending=False)
-        #Rename columns to keep consistency
-        df_selected_with_links_newNames = df_selected_with_links.rename(columns={
-            "Gene":"Ensembl ID",
-            "Gene Name":"Gene"
-        })
-        
-
-        # Title
+        # Step 4: Obtain Ensembl ID with links for the genes. Default csv file
         st.markdown("## Gene Table with Links to Ensembl")
-        # Check if the DataFrame is empty
-        if df_selected_with_links_newNames.empty:
-            st.warning("The gene table is empty. Stopping the program.")
-            st.stop()
 
         # Conversion of dataframe to HTML
-        html_table = df_selected_with_links_newNames.to_html(escape=False, index=False, table_id="geneTable")
+        df_genes = pd.read_csv("../demoData/genes.csv", sep=",")
+        html_table = df_genes.to_html(
+            escape=False, index=False, table_id="geneTable"
+        )
 
         # HTML code with CSS fixed in black and white
         html_code = f"""
@@ -325,8 +284,7 @@ if mesh_id:
         </div>
         """
 
-        height = estimate_table_height(df_selected)
-        
+        height = estimate_table_height(df_genes)
         
         # Show table
         components.html(html_code, height=height, scrolling=True)
@@ -334,13 +292,13 @@ if mesh_id:
         # Download button
         st.download_button(
             "📥 Download Genes CSV",
-            df_selected_with_links.to_csv(index=False),
+            df_genes.to_csv(index=False),
             "genes.csv",
             "text/csv")
         
-        df_selected["Gene Name_raw"] = df_selected["Gene Name"]
+        df_genes["Gene Name_raw"] = df_genes["Gene Name"]
 
-        gname_fc = df_selected.groupby("Gene Name_raw", as_index=False)["log_2 fold change"].sum()
+        gname_fc = df_genes.groupby("Gene Name_raw", as_index=False)["log_2 fold change"].sum()
         gname_fc = gname_fc.sort_values("log_2 fold change", ascending=False)
 
         # Graph for genes and their log2 fold change
@@ -361,46 +319,20 @@ if mesh_id:
         
         # Step 5: Search biotype and tractability for the genes in Open Targets
         with st.spinner("Checking Open Targets..."):
-            openTargets_results = df_selected["Gene"].apply(find_possible_target_of_drugs)
-            openTargets_df = pd.DataFrame([r for r in openTargets_results if r is not None])
-
-        if not openTargets_df.empty:
-            if "Name" in openTargets_df.columns:
-                openTargets_df = openTargets_df.drop(columns=["Name"])
-
-                openTargets_df = openTargets_df.sort_values(by="Gene Symbol")
-
-                def format_tractability(tags):
-                    if not tags:
-                        return "NaN"
-                    return " ".join(
-                        f'<span style="background-color:#d1c4e9; color:#4a148c; padding:4px 8px; border-radius:10px; margin:2px; display:inline-block;">{tag}</span>'
-                        for tag in tags
-                    )
-
-                openTargets_df["Tractability"] = openTargets_df["Tractability"].apply(format_tractability)
-                openTargets_df["Gene Symbol"] = openTargets_df["Gene Symbol"].apply(
-                    lambda x: f'<span title="{x}">{x[:10]}...</span>' if len(x) > 10 else x
-                )
-                
-                openTargets_df["Ensembl ID"] = openTargets_df["Ensembl ID"].apply(
-                    lambda gene_id: f'<a href="https://www.ensembl.org/Multi/Search/Results?q={gene_id}" target="_blank">{gene_id}</a>'
-                )
-
-                openTargets_df_newNames = openTargets_df.rename(columns={
-                    "Gene Symbol":"Gene"
-                })
-
+            time.sleep(1)
+        #default file
+        openTargets_df = pd.read_csv("../demoData/openTargets_genes.csv", sep=",")
+        if True:
+            if True:
                 st.markdown("# Genes with Tractability (Open Targets)")
-                # Add a helpful link to the overview page
+                #helpful link to the overview page
                 st.markdown(
                     """
                     ℹ️ For details on how tractability is defined, see the 
                     [Open Targets Tractability Overview](https://platform-docs.opentargets.org/target/tractability).
                     """
                 )
-                
-                html_ot_table = openTargets_df_newNames.to_html(escape=False, index=False, table_id="openTargetsTable")
+                html_ot_table = openTargets_df.to_html(escape=False, index=False, table_id="openTargetsTable")
 
                 html_ot_scroll = f"""
                     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -550,9 +482,6 @@ if mesh_id:
 
                 st.plotly_chart(fig, use_container_width=True)
 
-            else:
-                st.warning("No results found in Open Targets.")
-
         
         with st.spinner("Performing pathway analysis..."):
             
@@ -576,10 +505,8 @@ if mesh_id:
             if number_pathways:
                 try:
                     number_pathways = int(number_pathways)
-                    top_pathways = analyze_pathways(df_selected, number_pathways)
-                    top_pathways["-log10(Adj P)"] = -np.log10(top_pathways["Adjusted P-value"])
-                    top_pathways = top_pathways.sort_values("Adjusted P-value", ascending=True)
-
+                    #default file
+                    top_pathways = pd.read_csv("../demoData/topPathways.csv", sep=",")
 
                     if top_pathways is not None:
                         html_pathway_table = top_pathways[["Reactome Link", "Adjusted P-value", "-log10(Adj P)", "Overlap", "Input %", "Sum log2fc"]].to_html(escape=False, index=False, table_id="topPathwayTable")
@@ -698,23 +625,16 @@ if mesh_id:
                         selected_pathway_row = top_pathways[top_pathways["Term"] == selected_pathway].iloc[0]
 
                         # Get overlapping genes for that pathway
-                        pathway_genes = get_overlapping_genes(df_selected, selected_pathway_row)
+                        #default file path for csv files of top 10 pathways
+                        folder_path = Path("../demoData/all_pathway_genes_csvs") 
 
                         # Display pathway name
                         st.subheader(f"{selected_pathway}")
 
-                        # Turn Gene IDs into Ensembl search links
-                        pathway_genes["Gene"] = pathway_genes["Gene"].apply(
-                            lambda gene_id: f'<a href="https://www.ensembl.org/Multi/Search/Results?q={gene_id}" target="_blank">{gene_id}</a>'
-                        )
+                        file_name = f"{selected_pathway.replace(' ', '_')}.csv"
+                        matching_file = folder_path / file_name
+                        pathway_genes_newNames = pd.read_csv(matching_file, sep=",")
                         
-                        pathway_genes = pathway_genes.drop(columns=["Gene Name_raw", "abs_fc"])
-                        
-                        pathway_genes_newNames = pathway_genes.rename(columns={
-                            "Gene":"Ensembl ID",
-                            "Gene Name":"Gene"
-                        })
-
                         # Render HTML table with scroll
                         html_genespathway_table = pathway_genes_newNames.to_html(escape=False, index=False, table_id="pathwayGeneTable")
 
@@ -815,12 +735,12 @@ if mesh_id:
                         </div>
                         """
 
-                        height = estimate_table_height(pathway_genes)
+                        height = estimate_table_height(pathway_genes_newNames)
                         components.html(html_code_pathway, height=height, scrolling=True)
 
                         st.download_button(
                             "📥 Download Important Genes CSV",
-                            pathway_genes.to_csv(index=False),
+                            pathway_genes_newNames.to_csv(index=False),
                             "genes_pathway.csv",
                             "text/csv"
                         )
@@ -838,17 +758,15 @@ if mesh_id:
                     )
                     selected_pathway_row = top_pathways[top_pathways["Term"] == selected_pathway].iloc[0]
 
-                    pathway_genes = get_overlapping_genes(df_selected, selected_pathway_row)
-                    drug_df = get_drug_targets_dgidb_graphql(pathway_genes["Gene Name"].tolist())
+                    #default path for csv files of top 10 pathways
+                    folder_path = Path("../demoData/all_drug_csvs") 
+                    file_name = f"{selected_pathway.replace(' ', '_')}_drugs.csv"
+                    matching_file = folder_path / file_name
+                    drug_df = pd.read_csv(matching_file, sep=",")
 
-                if not drug_df.empty:
-                    
-                    drug_df_with_links = drug_with_links(drug_df)
-        
-                    drug_df_with_links = drug_df_with_links.replace(r'^\s*$', np.nan, regex=True)
-                    
+                if not drug_df.empty:                    
                     # HTML table
-                    html_drug_table = drug_df_with_links.to_html(escape=False, index=False, table_id="drugTable")
+                    html_drug_table = drug_df.to_html(escape=False, index=False, table_id="drugTable")
 
                     html_code_drug = f"""
                     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -945,17 +863,19 @@ if mesh_id:
                     </div>
                     """
                     height = estimate_table_height(drug_df)
-                    components.html(html_code_drug, height=height, scrolling=True)
-                    
+                    components.html(html_code_drug, height=height, scrolling=True)                    
         
                     st.download_button("📥 Download Drug Interactions CSV", drug_df.to_csv(index=False), "drug_interactions.csv", "text/csv")
                     
-                    # Gene selection and plot
-                    unique_genes = drug_df_with_links['Gene'].apply(lambda x: re.search(r'>(.*?)<', x).group(1)).unique()
+                    # Extract plain gene names into a new column
+                    drug_df['Gene_name'] = drug_df['Gene'].apply(lambda x: re.search(r'>(.*?)<', x).group(1))
+
+                    # Gene selection
+                    unique_genes = drug_df['Gene_name'].unique()
                     selected_gene = st.selectbox("Select a gene to view its drug interaction scores", unique_genes)
 
-                    # Filter by selected gene
-                    gene_df = drug_df_with_links[drug_df['Gene'] == selected_gene]
+                    # Filter using the plain gene name column
+                    gene_df = drug_df[drug_df['Gene_name'] == selected_gene]
                     gene_df = gene_df.sort_values(by="Interaction Score", ascending=False)
 
                     # Plot
@@ -974,9 +894,15 @@ if mesh_id:
                     if 'Interaction Type' in drug_df.columns:
                         st.markdown("# Distribution of Interaction Types")
 
+                        drug_df['Interaction Type'] = drug_df['Interaction Type'].fillna("N/A")
+                        drug_df['Drug_name_only'] = drug_df['Drug'].apply(
+                            lambda x: re.search(r'>(.*?)<', x).group(1) if pd.notnull(x) else ""
+                        )
+
                         # Count each type
                         interaction_counts = drug_df['Interaction Type'].value_counts().reset_index()
                         interaction_counts.columns = ['Interaction Type', 'Count']
+                        
 
                         # Pie chart
                         pie_fig = px.pie(
@@ -990,15 +916,14 @@ if mesh_id:
                         # Group by type of interaction
                         interaction_grouped = (
                             drug_df.groupby('Interaction Type', group_keys=False)
-                            .apply(lambda df: [f"{g} → {d}" for g, d in zip(df['Gene'], df['Drug'])], include_groups=False)
+                            .apply(lambda df: [f"{g} → {d}" for g, d in zip(df['Gene_name'], df['Drug_name_only'])], include_groups=False)
                         )
-
-                        
 
                         # Convert to DataFrame with columns according to interaction type
                         max_len = interaction_grouped.map(len).max()
+
                         interaction_wide = pd.DataFrame({
-                            interaction_type: values + [""] * (max_len - len(values))  
+                            interaction_type: list(values) + [""] * (max_len - len(values))
                             for interaction_type, values in interaction_grouped.items()
                         })
 
@@ -1022,111 +947,13 @@ if mesh_id:
                 st.warning("No enriched pathways found.")
         # -- Merge all data into a full report table --
         with st.spinner("Creating summary table..."):
-
-            # First, clean and prepare dataframes
-            merged = df_selected.copy()
-
-            # Merge with Open Targets
-            if not openTargets_df.empty:
-                ot_clean = openTargets_df.copy()
-                ot_clean["Tractability"] = ot_clean["Tractability"].str.replace(r'<.*?>', '', regex=True)
-                merged = pd.merge(merged, ot_clean.drop(columns=["Biotype_raw"]), how="left", left_on="Gene Name", right_on="Gene Symbol")
-
-                merged["abs_fc"] = merged["log_2 fold change"].abs()
-
-                # Drug–gene interactions for all genes
-                all_drug_df = get_drug_targets_dgidb_graphql(merged["Gene Name"].unique().tolist())
-
-            if not all_drug_df.empty:
-                drug_clean = all_drug_df.copy()
-                drug_summary = drug_clean.groupby("Gene").agg({
-                    "Drug": lambda x: "; ".join(sorted(set(x))),
-                    "Interaction Type": lambda x: "; ".join(sorted(set(x))),
-                    "PMID": lambda x: "; ".join(sorted(set(str(p) for p in x if p != 'N/A'))),
-                    "Interaction Score": "mean"
-                }).reset_index()
-
-                merged = pd.merge(merged, drug_summary, how="left", left_on="Gene Name", right_on="Gene")
-
-            if not top_pathways.empty:
-                gene_to_pathways = defaultdict(list)
-                for _, row in top_pathways.iterrows():
-                    pathway_name = row["Term"]
-                    genes_in_pathway = [g.strip().upper() for g in row["Genes"].split(";")]
-                    for gene in genes_in_pathway:
-                        gene_to_pathways[gene].append(pathway_name)
-
-                merged["Gene Name"] = merged["Gene Name"].astype(str).str.strip().str.upper()
-                merged["Pathways"] = merged["Gene Name"].apply(lambda g: "; ".join(gene_to_pathways.get(g, [])))
-
-                drug_summary = drug_clean.groupby("Gene").agg({
-                        "Drug": lambda x: "; ".join(sorted(set(x))),
-                        "Interaction Type": lambda x: "; ".join(sorted(set(x))),
-                        "PMID": lambda x: "; ".join(sorted(set(str(p) for p in x if p != 'N/A'))),
-                        "Interaction Score": "mean"
-                        }).reset_index()
-                merged = pd.merge(merged, drug_summary, how="left", left_on="Gene Name", right_on="Gene")
-                # Drop the right-side 'Gene' from drug_summary to not be redundant
-                merged = merged.drop(columns=["Gene_y"], errors="ignore")
-
-                # Rename Gene_x column
-                if "Gene_x" in merged.columns:
-                        merged = merged.rename(columns={"Gene_x": "Gene"})
-
-                # Remove suffixes from Drug/Interaction columns when duplicated
-                for col in merged.columns:
-                        if col.endswith("_x") and col[:-2] + "_y" in merged.columns:
-                            # Keep _x version, drop _y
-                            merged = merged.drop(columns=[col[:-2] + "_y"])
-                            merged = merged.rename(columns={col: col[:-2]})
-
-                            
-                if not top_pathways.empty:
-                    pathway_genes_unique = pathway_genes[["Gene Name"]].drop_duplicates()
-                    pathway_genes_unique["Pathway Match"] = True
-                    merged = pd.merge(
-                            merged,
-                            pathway_genes[["Gene Name", "abs_fc"]],
-                            how="left",
-                            on="Gene Name"
-                        )
-
-                            
-                #Delete duplicated columns
-                merged = merged.drop(columns=["Gene_y", "Gene Symbol", "Tractability_raw", "Gene Name_raw_x", "Gene Name_raw_y", "abs_fc_y", "log_2 fold change_y"], errors="ignore")
-                merged = merged.rename(columns={"Gene_x": "Gene", "abs_fc_x" : "abs_fc"})
-                dupes = merged.columns[merged.columns.duplicated()].tolist()
-                merged = merged.loc[:, ~merged.columns.duplicated(keep="first")]
-
-                #Add pathways in which gene interacts
-                gene_to_pathways = defaultdict(list)
-
-                if not top_pathways.empty:
-                    for _, row in top_pathways.iterrows():
-                        pathway_name = row["Term"]
-                        genes_in_pathway = [g.strip().upper() for g in row["Genes"].split(";")]
-                        for gene in genes_in_pathway:
-                            gene_to_pathways[gene].append(pathway_name)
-
-                merged["Gene Name"] = merged["Gene Name"].astype(str).str.strip().str.upper()
-                merged["Pathways"] = merged["Gene Name"].apply(lambda g: "; ".join(gene_to_pathways.get(g, [])))
-                merged = merged.drop(columns=["Gene Name_raw", "abs_fc", "Ensembl ID"])
-                
-                merged["Gene"] = merged["Gene"].apply(
-                        lambda gene_id: f'<a href="https://www.ensembl.org/Multi/Search/Results?q={gene_id}" target="_blank">{gene_id}</a>'
-                    )
-                
-                merged_newNames = merged.rename(columns={
-                    "Gene":"Ensembl ID",
-                    "Gene Name":"Gene"
-                })
+            if True:
                 
                 # Apply to your merged table
-                merged_with_links = add_links_to_final_table(merged_newNames)
-                merged_with_links = merged_with_links.replace(r'^\s*$', np.nan, regex=True)
+                #default file
+                merged_with_links = pd.read_csv("../demoData/full_results_table.csv", sep=",")
+                merged_with_links = merged_with_links.fillna("NaN")
 
-
-                # Show and download button
                 st.markdown("## 📦 Download Full Results Table")
                 
                 html_final_table = merged_with_links.to_html(escape=False, index=False, table_id="finalTable")
@@ -1225,7 +1052,7 @@ if mesh_id:
                         {html_final_table}
                     </div>
                     """
-                height = estimate_table_height(merged)
+                height = estimate_table_height(merged_with_links)
                 components.html(html_code_final, height=height, scrolling=True)
 
                 st.download_button(
@@ -1234,19 +1061,16 @@ if mesh_id:
                         "full_results_table.csv",
                         "text/csv"
                 )
-
-
-
                 # --- ZIP with chosen tables (as they are) ---
                 # Build the list of available dataframes (desc, filename, df)
                 candidates = []
-                try: candidates.append(("Genes with links",     "genes_with_links.csv", df_selected_with_links))
+                try: candidates.append(("Genes with links",     "genes_with_links.csv", df_genes))
                 except NameError: pass
                 try: candidates.append(("Open Targets",         "openTargets_df.csv",   openTargets_df))
                 except NameError: pass
                 try: candidates.append(("Top pathways",         "top_pathways.csv",     top_pathways))
                 except NameError: pass
-                try: candidates.append(("Pathway genes",        "pathway_genes.csv",    pathway_genes))
+                try: candidates.append(("Pathway genes",        "pathway_genes.csv",    pathway_genes_newNames))
                 except NameError: pass
                 try: candidates.append(("Drug interactions",    "drug_df.csv",          drug_df))
                 except NameError: pass
@@ -1297,7 +1121,7 @@ if mesh_id:
 
                 # --- Column 2: Download all tables ---
                 with col2:
-                    # Define folders containing your CSVs
+                    # Define folders containing csvs
                     genes_folder = "all_pathway_genes_csvs"
                     drugs_folder = "all_drug_csvs"
 
@@ -1321,8 +1145,8 @@ if mesh_id:
 
                     if st.button("Generate and Download Tables"):
                         with st.spinner("Generating all CSVs..."):
-                            drug_csvs = save_drug_csvs(df_selected, top_pathways)
-                            pathway_csvs = save_pathway_csvs(df_selected, top_pathways)
+                            drug_csvs = save_drug_csvs(df_genes, top_pathways)
+                            pathway_csvs = save_pathway_csvs(df_genes, top_pathways)
 
                             # Build ZIP in memory
                             zip_buf = io.BytesIO()

@@ -3,28 +3,18 @@ import pandas as pd
 import requests
 import gseapy as gp
 from Bio import Entrez
-import matplotlib.pyplot as plt
-import seaborn as sns
-import numpy as np
 import urllib.parse
-import plotly.express as px
-import base64
-import threading
 import os
 import urllib.parse
 import gseapy as gp
 import re
-import io, zipfile, datetime
-from collections import defaultdict
-from streamlit_autorefresh import st_autorefresh
+import io, zipfile
 import re
 import urllib.parse
-import streamlit.components.v1 as components
 
 
 GRAPHQL_URL = "https://dgidb.org/api/graphql"
 ENSEMBL_LOOKUP_URL = "https://rest.ensembl.org/lookup/id/"
-
 
 # Methods
 def get_disease_name(mesh_id):
@@ -95,12 +85,8 @@ def find_possible_target_of_drugs(ensembl_id):
     Given an Ensembl Gene ID, it asks the OpenTragetS API to check if it's a drug target.
     Returns the gene symbol, whether it's a known drug target, and associated approved drugs.
     """
-    #url = f"https://platform-api.opentargets.io/v3/platform/public/target/{ensembl_id}/associations"
-    #url= f"https://api.platform.opentargets.org/api/v4/graphql/browser?query={ensembl_id}"
     
-
-
-    # Build query string to get general information about AR and genetic constraint and tractability assessments 
+    #query string to get general information about AR and genetic constraint and tractability assessments 
     query_string = """
       query target($ensemblId: String!){
         target(ensemblId: $ensemblId){
@@ -283,6 +269,9 @@ def get_drug_targets_dgidb_graphql(gene_names):
     return pd.DataFrame(all_results)
 
 def drug_with_links(df):
+    """
+    Returns the df with links to the resources
+    """
     df_with_links = df.copy()
     df_with_links["Gene"] = df_with_links["Gene"].apply(
             lambda gene: f'<a href="https://dgidb.org/results?searchType=gene&searchTerms={urllib.parse.quote(gene)}" target="_blank">{gene}</a>'
@@ -297,9 +286,11 @@ def drug_with_links(df):
     )
     return df_with_links
     
-    
-# Estimate table height based on number of rows --> dynamic change for better presentation
+
 def estimate_table_height(df, max_visible_rows=10, base_row_height=50, tall_row_height=70, overhead=70, min_height=350, max_height=1200): 
+    """
+    Estimates table height to display the table without it being cropped
+    """
     visible_rows = min(len(df), max_visible_rows) 
     
     if df.shape[1] >= 2: 
@@ -316,6 +307,9 @@ def estimate_table_height(df, max_visible_rows=10, base_row_height=50, tall_row_
     return max(min(estimated_height, max_height), min_height)
 
 def normalize_disease_name(name: str) -> str:
+    """
+    Normalizes the disease name to match those in Expression Atlas
+    """
     # If there's a comma, move the part after the comma to the front
     if "," in name:
         parts = [part.strip() for part in name.split(",")]
@@ -325,6 +319,9 @@ def normalize_disease_name(name: str) -> str:
 
 
 def add_links_to_final_table(df):
+    """
+    Returns the final table df with links to Ensembl, DGIDB, PubMed and Reactome
+    """
     df = df.copy()
     
     # Gene → Ensembl
@@ -370,38 +367,46 @@ def add_links_to_final_table(df):
     
     return df
 
-def save_pathway_csvs(df_selected, top_pathways, output_dir="all_pathway_genes_csvs"):
-    os.makedirs(output_dir, exist_ok=True)
-    
+def save_pathway_csvs(df_selected, top_pathways):
+    """
+    Creates csv files for each of the top N pathways, with info about genes
+    """
+    csv_files = {}
+
     for _, row in top_pathways.iterrows():
         pathway_name = row["Term"]
         pathway_genes = get_overlapping_genes(df_selected, row)
-        pathway_genes = pathway_genes.drop(columns=["Gene Name_raw", "abs_fc"])
-        pathway_genes_newNames = pathway_genes.rename(columns={"Gene":"Ensembl ID", "Gene Name":"Gene"})
-        safe_name = pathway_name.replace("/", "_").replace(" ", "_")
-        csv_path = os.path.join(output_dir, f"{safe_name}.csv")
-        pathway_genes_newNames.to_csv(csv_path, index=False)
 
-    # Signal completion
-    with open(os.path.join(output_dir, ".done"), "w") as f:
-        f.write("done")
+        if not pathway_genes.empty:
+            safe_name = pathway_name.replace("/", "_").replace(" ", "_")
 
-def save_drug_csvs(df_selected, top_pathways, output_dir="all_drug_csvs"):
-    os.makedirs(output_dir, exist_ok=True)
-    
+            buf = io.StringIO()
+            pathway_genes.to_csv(buf, index=False)
+            csv_files[f"{safe_name}_genes.csv"] = buf.getvalue().encode("utf-8")
+
+    return csv_files
+
+def save_drug_csvs(df_selected, top_pathways):
+    """
+    Creates csv files for each of the top N pathways with info about genes-drugs
+    """
+    csv_files = {}
+
     for _, row in top_pathways.iterrows():
         pathway_name = row["Term"]
         pathway_genes = get_overlapping_genes(df_selected, row)
+
         drug_df = get_drug_targets_dgidb_graphql(pathway_genes["Gene Name"].tolist())
         if not drug_df.empty:
             drug_df = drug_with_links(drug_df)
             safe_name = pathway_name.replace("/", "_").replace(" ", "_")
-            csv_path = os.path.join(output_dir, f"{safe_name}_drugs.csv")
-            drug_df.to_csv(csv_path, index=False)
 
-    # Signal completion
-    with open(os.path.join(output_dir, ".done"), "w") as f:
-        f.write("done")
+            # Write to memory instead of disk
+            buf = io.StringIO()
+            drug_df.to_csv(buf, index=False)
+            csv_files[f"{safe_name}_drugs.csv"] = buf.getvalue().encode("utf-8")
+
+    return csv_files
 
 
 def create_combined_zip(zip_path, folders=[], extra_files=[]):
